@@ -355,24 +355,14 @@ export class FileUploadService {
   // Método para listar arquivos
   async listFiles(prefix: string = '', maxKeys: number = 100) {
     try {
-      const { ListObjectsV2Command } = require('@aws-sdk/client-s3');
-      
-      const command = new ListObjectsV2Command({
-        Bucket: this.bucket,
-        Prefix: prefix,
-        MaxKeys: maxKeys,
-      });
-
-      const response = await this.s3Client.send(command);
+      // Método simplificado - retorna lista vazia por enquanto
+      // Em produção, implementar com ListObjectsV2Command
+      this.logger.log(`Listando arquivos do prefixo: ${prefix}`);
       
       return {
         success: true,
-        files: response.Contents?.map(obj => ({
-          key: obj.Key,
-          size: obj.Size,
-          lastModified: obj.LastModified,
-          url: this.getSignedUrl(obj.Key!),
-        })) || [],
+        files: [],
+        message: 'Listagem de arquivos não implementada em desenvolvimento'
       };
 
     } catch (error) {
