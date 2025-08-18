@@ -271,10 +271,10 @@ export default function LandingPage() {
                 className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-lg px-8 py-6"
                 asChild
               >
-                <a href="#contact">
+                <Link href="/login">
                   <Play className="mr-2 h-5 w-5" />
-                  Começar Teste Grátis
-                </a>
+                  Fazer Login
+                </Link>
               </Button>
               <Button 
                 size="lg" 
@@ -282,10 +282,10 @@ export default function LandingPage() {
                 className="text-lg px-8 py-6 border-blue-200 hover:bg-blue-50"
                 asChild
               >
-                <a href="#demo">
+                <Link href="/demo">
                   <Smartphone className="mr-2 h-5 w-5" />
                   Ver Demonstração
-                </a>
+                </Link>
               </Button>
             </div>
 

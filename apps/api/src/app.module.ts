@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { LoggerModule } from 'nestjs-pino';
-import { ScheduleModule } from '@nestjs/schedule';
 
 // Core modules
 import { PrismaModule } from './core/prisma/prisma.module';
@@ -57,28 +55,27 @@ import { AppService } from './app.service';
       },
     ]),
 
-    // Logging
-    LoggerModule.forRoot({
-      pinoHttp: {
-        level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-        transport: process.env.NODE_ENV === 'development' 
-          ? {
-              target: 'pino-pretty',
-              options: {
-                colorize: true,
-                singleLine: true,
-                translateTime: 'SYS:dd/mm/yyyy HH:MM:ss',
-              },
-            }
-          : undefined,
-        customProps: () => ({
-          context: 'HTTP',
-        }),
-      },
-    }),
+    // Logging e Scheduling desabilitados temporariamente
+    // LoggerModule.forRoot({
+    //   pinoHttp: {
+    //     level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+    //     transport: process.env.NODE_ENV === 'development' 
+    //       ? {
+    //           target: 'pino-pretty',
+    //           options: {
+    //             colorize: true,
+    //             singleLine: true,
+    //             translateTime: 'SYS:dd/mm/yyyy HH:MM:ss',
+    //           },
+    //         }
+    //       : undefined,
+    //     customProps: () => ({
+    //       context: 'HTTP',
+    //     }),
+    //   },
+    // }),
 
-    // Scheduling
-    ScheduleModule.forRoot(),
+    // ScheduleModule.forRoot(),
 
     // Core modules
     PrismaModule,

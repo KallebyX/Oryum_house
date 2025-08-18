@@ -29,24 +29,25 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 
     // Log SQL queries in development
     if (process.env.NODE_ENV === 'development') {
-      this.$on('query', (e) => {
-        this.logger.debug(`Query: ${e.query}`);
-        this.logger.debug(`Params: ${e.params}`);
-        this.logger.debug(`Duration: ${e.duration}ms`);
-      });
+      // Logging de queries desabilitado temporariamente
+      // this.$on('query', (e) => {
+      //   this.logger.debug(`Query: ${e.query}`);
+      //   this.logger.debug(`Params: ${e.params}`);
+      //   this.logger.debug(`Duration: ${e.duration}ms`);
+      // });
     }
 
-    this.$on('error', (e) => {
-      this.logger.error(e);
-    });
+    // this.$on('error', (e) => {
+    //   this.logger.error(e);
+    // });
 
-    this.$on('warn', (e) => {
-      this.logger.warn(e);
-    });
+    // this.$on('warn', (e) => {
+    //   this.logger.warn(e);
+    // });
 
-    this.$on('info', (e) => {
-      this.logger.log(e);
-    });
+    // this.$on('info', (e) => {
+    //   this.logger.log(e);
+    // });
   }
 
   async onModuleInit() {

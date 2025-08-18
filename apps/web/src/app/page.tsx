@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   // Redirecionar para a landing page de vendas
-  redirect('/landing');
+  redirect('/login');
 }
