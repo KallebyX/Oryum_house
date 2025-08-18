@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Executando verificações pré-commit..."
+
+# Lint staged files
+npx lint-staged
+
+echo "✅ Verificações pré-commit concluídas!"

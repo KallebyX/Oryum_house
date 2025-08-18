@@ -1,0 +1,47 @@
+{
+  "name": "oryumhouse",
+  "version": "1.0.0",
+  "description": "Sistema de gestão de condomínios - PWA responsivo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "test": "turbo test",
+    "lint": "turbo lint",
+    "type-check": "turbo type-check",
+    "clean": "turbo clean",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "seed": "cd apps/api && npm run seed",
+    "db:migrate": "cd apps/api && npm run db:migrate",
+    "db:studio": "cd apps/api && npm run db:studio"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^18.4.3",
+    "@commitlint/config-conventional": "^18.4.3",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.1.1",
+    "turbo": "^1.11.2",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "keywords": [
+    "condominium",
+    "property-management",
+    "pwa",
+    "nextjs",
+    "nestjs",
+    "typescript"
+  ],
+  "author": "Oryum House Team",
+  "license": "MIT"
+}
