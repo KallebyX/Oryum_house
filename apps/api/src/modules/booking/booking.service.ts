@@ -9,12 +9,16 @@ import {
   BookingResponseDto,
 } from './dto/booking.dto';
 import { Prisma, BookingStatus } from '@prisma/client';
+import { GamificationHelper } from '../gamification/gamification.helper';
 
 @Injectable()
 export class BookingService {
   private readonly logger = new Logger(BookingService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private gamificationHelper: GamificationHelper,
+  ) {}
 
   /**
    * Criar nova reserva
@@ -107,6 +111,9 @@ export class BookingService {
     this.logger.log(
       `Reserva criada: ${booking.id} - Área ${area.name} - Status: ${booking.status}`
     );
+
+    // Adicionar pontos de gamificação
+    await this.gamificationHelper.onBookingCreate(condominiumId, userId, booking.id);
 
     return this.mapToResponse(booking);
   }

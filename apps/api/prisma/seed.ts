@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole, TicketStatus, TicketPriority, TicketCategory } from '@prisma/client';
+import { PrismaClient, UserRole, TicketStatus, TicketPriority, TicketCategory, AchievementCategory } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -7,6 +7,10 @@ async function main() {
   console.log('🌱 Iniciando seed do banco de dados...');
 
   // Limpar dados existentes (cuidado em produção!)
+  await prisma.pointHistory.deleteMany();
+  await prisma.userAchievement.deleteMany();
+  await prisma.achievement.deleteMany();
+  await prisma.userPoints.deleteMany();
   await prisma.ticketComment.deleteMany();
   await prisma.ticketStatusHistory.deleteMany();
   await prisma.ticketAttachment.deleteMany();
@@ -682,6 +686,166 @@ async function main() {
     await prisma.incident.create({ data: ocorrencia });
   }
 
+  console.log('🏆 Criando conquistas...');
+
+  // Criar conquistas padrão
+  const conquistas = [
+    // PARTICIPATION - Participação
+    {
+      key: 'FIRST_NOTICE_READ',
+      name: 'Bem Informado',
+      description: 'Leia seu primeiro comunicado',
+      category: AchievementCategory.PARTICIPATION,
+      points: 5,
+      requirement: { type: 'notice_read', count: 1 },
+    },
+    {
+      key: 'NOTICE_READER',
+      name: 'Leitor Assíduo',
+      description: 'Leia 10 comunicados',
+      category: AchievementCategory.PARTICIPATION,
+      points: 20,
+      requirement: { type: 'notice_read', count: 10 },
+    },
+    {
+      key: 'NOTICE_MASTER',
+      name: 'Mestre da Informação',
+      description: 'Leia 50 comunicados',
+      category: AchievementCategory.PARTICIPATION,
+      points: 50,
+      requirement: { type: 'notice_read', count: 50 },
+    },
+    {
+      key: 'FIRST_ASSEMBLY_VOTE',
+      name: 'Primeiro Voto',
+      description: 'Vote em uma assembleia',
+      category: AchievementCategory.PARTICIPATION,
+      points: 15,
+      requirement: { type: 'assembly_vote', count: 1 },
+    },
+    {
+      key: 'ASSEMBLY_PARTICIPANT',
+      name: 'Participante Ativo',
+      description: 'Vote em 5 assembleias',
+      category: AchievementCategory.PARTICIPATION,
+      points: 40,
+      requirement: { type: 'assembly_vote', count: 5 },
+    },
+    {
+      key: 'ASSEMBLY_CHAMPION',
+      name: 'Campeão da Democracia',
+      description: 'Vote em 20 assembleias',
+      category: AchievementCategory.PARTICIPATION,
+      points: 100,
+      requirement: { type: 'assembly_vote', count: 20 },
+    },
+
+    // COMMUNITY - Comunidade
+    {
+      key: 'FIRST_TICKET',
+      name: 'Primeira Demanda',
+      description: 'Abra sua primeira demanda',
+      category: AchievementCategory.COMMUNITY,
+      points: 10,
+      requirement: { type: 'ticket_create', count: 1 },
+    },
+    {
+      key: 'PROBLEM_SOLVER',
+      name: 'Solucionador',
+      description: 'Complete 5 demandas',
+      category: AchievementCategory.COMMUNITY,
+      points: 30,
+      requirement: { type: 'ticket_complete', count: 5 },
+    },
+    {
+      key: 'SUPER_SOLVER',
+      name: 'Super Solucionador',
+      description: 'Complete 20 demandas',
+      category: AchievementCategory.COMMUNITY,
+      points: 80,
+      requirement: { type: 'ticket_complete', count: 20 },
+    },
+    {
+      key: 'INCIDENT_REPORTER',
+      name: 'Olho Vivo',
+      description: 'Reporte 3 ocorrências',
+      category: AchievementCategory.COMMUNITY,
+      points: 25,
+      requirement: { type: 'incident_report', count: 3 },
+    },
+
+    // PUNCTUALITY - Pontualidade
+    {
+      key: 'FIRST_BOOKING',
+      name: 'Primeira Reserva',
+      description: 'Faça sua primeira reserva',
+      category: AchievementCategory.PUNCTUALITY,
+      points: 5,
+      requirement: { type: 'booking_create', count: 1 },
+    },
+    {
+      key: 'BOOKING_REGULAR',
+      name: 'Usuário Regular',
+      description: 'Faça 10 reservas',
+      category: AchievementCategory.PUNCTUALITY,
+      points: 30,
+      requirement: { type: 'booking_create', count: 10 },
+    },
+    {
+      key: 'BOOKING_MASTER',
+      name: 'Mestre das Reservas',
+      description: 'Faça 50 reservas',
+      category: AchievementCategory.PUNCTUALITY,
+      points: 75,
+      requirement: { type: 'booking_create', count: 50 },
+    },
+
+    // SUPPORT - Suporte
+    {
+      key: 'DOCUMENT_UPLOADER',
+      name: 'Organizador',
+      description: 'Faça upload de 5 documentos',
+      category: AchievementCategory.SUPPORT,
+      points: 30,
+      requirement: { type: 'document_upload', count: 5 },
+    },
+
+    // SPECIAL - Especiais
+    {
+      key: 'LEVEL_5',
+      name: 'Nível 5 Alcançado',
+      description: 'Alcance o nível 5',
+      category: AchievementCategory.SPECIAL,
+      points: 50,
+      requirement: { type: 'level', value: 5 },
+    },
+    {
+      key: 'LEVEL_10',
+      name: 'Nível 10 Alcançado',
+      description: 'Alcance o nível 10',
+      category: AchievementCategory.SPECIAL,
+      points: 100,
+      requirement: { type: 'level', value: 10 },
+    },
+    {
+      key: 'PIONEER',
+      name: 'Pioneiro',
+      description: 'Um dos primeiros 10 moradores cadastrados',
+      category: AchievementCategory.SPECIAL,
+      points: 25,
+      requirement: { type: 'special', value: 'pioneer' },
+    },
+  ];
+
+  for (const conquista of conquistas) {
+    await prisma.achievement.create({
+      data: {
+        ...conquista,
+        condominiumId: condominium.id,
+      },
+    });
+  }
+
   console.log('✅ Seed concluído com sucesso!');
   console.log('');
   console.log('🔑 Credenciais para teste:');
@@ -720,6 +884,7 @@ async function main() {
   console.log(`   • ${documentos.length} documentos`);
   console.log(`   • ${manutencoes.length} planos de manutenção`);
   console.log(`   • ${ocorrencias.length} ocorrências`);
+  console.log(`   • ${conquistas.length} conquistas`);
 }
 
 main()

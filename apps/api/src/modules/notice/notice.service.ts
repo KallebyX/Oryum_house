@@ -2,12 +2,16 @@ import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nest
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { CreateNoticeDto, UpdateNoticeDto, QueryNoticeDto, NoticeResponseDto } from './dto/notice.dto';
 import { Prisma } from '@prisma/client';
+import { GamificationHelper } from '../gamification/gamification.helper';
 
 @Injectable()
 export class NoticeService {
   private readonly logger = new Logger(NoticeService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private gamificationHelper: GamificationHelper,
+  ) {}
 
   /**
    * Criar novo comunicado
@@ -267,6 +271,10 @@ export class NoticeService {
         userId,
       },
     });
+
+    // Adicionar pontos de gamificação
+    await this.gamificationHelper.onNoticeRead(condominiumId, userId, noticeId);
+    await this.gamificationHelper.checkReaderAchievement(condominiumId, userId);
 
     this.logger.log(`Leitura confirmada: usuário ${userId} leu comunicado ${noticeId}`);
 

@@ -24,6 +24,7 @@ import { DocumentModule } from './modules/document/document.module';
 import { MaintenanceModule } from './modules/maintenance/maintenance.module';
 import { IncidentModule } from './modules/incident/incident.module';
 import { ReportModule } from './modules/report/report.module';
+import { GamificationModule } from './modules/gamification/gamification.module';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -99,6 +100,7 @@ import { AppService } from './app.service';
     MaintenanceModule,
     IncidentModule,
     ReportModule,
+    GamificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

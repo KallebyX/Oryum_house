@@ -2,16 +2,17 @@ import { Injectable, NotFoundException, ForbiddenException, BadRequestException,
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { WebSocketGateway } from '../../core/websocket/websocket.gateway';
 import { TicketStatus, TicketPriority, UserRole } from '@prisma/client';
-import { 
-  CreateTicketDto, 
-  UpdateTicketDto, 
-  AssignTicketDto, 
-  UpdateTicketStatusDto, 
-  CloseTicketDto, 
-  TicketSatisfactionDto, 
+import {
+  CreateTicketDto,
+  UpdateTicketDto,
+  AssignTicketDto,
+  UpdateTicketStatusDto,
+  CloseTicketDto,
+  TicketSatisfactionDto,
   AddTicketCommentDto,
-  TicketFiltersDto 
+  TicketFiltersDto
 } from './dto/ticket.dto';
+import { GamificationHelper } from '../gamification/gamification.helper';
 
 @Injectable()
 export class TicketService {
@@ -20,6 +21,7 @@ export class TicketService {
   constructor(
     private prisma: PrismaService,
     private websocketGateway: WebSocketGateway,
+    private gamificationHelper: GamificationHelper,
   ) {}
 
   async create(userId: string, condominiumId: string, createTicketDto: CreateTicketDto) {
@@ -95,6 +97,9 @@ export class TicketService {
       unit: ticket.unit,
       createdAt: ticket.createdAt,
     });
+
+    // Adicionar pontos de gamificação
+    await this.gamificationHelper.onTicketCreate(condominiumId, userId, ticket.id);
 
     return ticket;
   }
@@ -421,6 +426,11 @@ export class TicketService {
       changedBy: userId,
       note: updateStatusDto.note,
     });
+
+    // Adicionar pontos se foi completada
+    if (updateStatusDto.status === TicketStatus.CONCLUIDA && ticket.assignedToId) {
+      await this.gamificationHelper.onTicketComplete(condominiumId, ticket.assignedToId, id);
+    }
 
     return updatedTicket;
   }
