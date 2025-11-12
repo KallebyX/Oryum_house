@@ -112,6 +112,10 @@ model User {
   reportedIncidents     Incident[]
   notifications         Notification[]
   auditLogs             AuditLog[]
+  // Gamificação
+  points                UserPoints[]
+  achievements          UserAchievement[]
+  pointHistory          PointHistory[]
 
   @@map("users")
 }
@@ -146,6 +150,10 @@ model Condominium {
   maintenancePlans MaintenancePlan[]
   incidents        Incident[]
   auditLogs        AuditLog[]
+  // Gamificação
+  userPoints       UserPoints[]
+  achievements     Achievement[]
+  pointHistories   PointHistory[]
 
   @@map("condominiums")
 }
@@ -558,4 +566,91 @@ model AuditLog {
   @@index([condominiumId, entity, createdAt])
   @@index([actorId, createdAt])
   @@map("audit_logs")
+}
+
+// ==========================================
+// GAMIFICAÇÃO - Sistema de Pontos e Conquistas
+// ==========================================
+
+enum AchievementCategory {
+  PARTICIPATION  // Participação em assembleias, leitura de comunicados
+  COMMUNITY      // Ações comunitárias
+  PUNCTUALITY    // Pontualidade em pagamentos, reservas
+  SUPPORT        // Ajuda a outros moradores
+  SPECIAL        // Conquistas especiais
+}
+
+// Pontos do usuário por condomínio
+model UserPoints {
+  id            String   @id @default(cuid())
+  userId        String
+  condominiumId String
+  points        Int      @default(0)
+  level         Int      @default(1)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  condominium Condominium @relation(fields: [condominiumId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, condominiumId])
+  @@index([condominiumId, points])
+  @@map("user_points")
+}
+
+// Conquistas disponíveis
+model Achievement {
+  id            String              @id @default(cuid())
+  condominiumId String?             // null = conquista global
+  key           String              @unique // identificador único (ex: FIRST_TICKET, ASSEMBLY_VOTER_10X)
+  name          String
+  description   String
+  category      AchievementCategory
+  icon          String?
+  points        Int                 @default(0)
+  requirement   Json                // Condições para desbloquear
+  isActive      Boolean             @default(true)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  // Relations
+  condominium      Condominium?       @relation(fields: [condominiumId], references: [id], onDelete: Cascade)
+  userAchievements UserAchievement[]
+
+  @@map("achievements")
+}
+
+// Conquistas desbloqueadas pelos usuários
+model UserAchievement {
+  id            String   @id @default(cuid())
+  userId        String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+
+  // Relations
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
+}
+
+// Histórico de pontuação
+model PointHistory {
+  id            String   @id @default(cuid())
+  userId        String
+  condominiumId String
+  points        Int      // Pode ser positivo ou negativo
+  reason        String
+  entityType    String?  // TICKET, NOTICE, ASSEMBLY, VOTE, etc.
+  entityId      String?
+  createdAt     DateTime @default(now())
+
+  // Relations
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  condominium Condominium @relation(fields: [condominiumId], references: [id], onDelete: Cascade)
+
+  @@index([userId, condominiumId, createdAt])
+  @@map("point_history")
 }
