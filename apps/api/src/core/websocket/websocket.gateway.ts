@@ -240,6 +240,33 @@ export class WebSocketGateway implements OnGatewayInit, OnGatewayConnection, OnG
     });
   }
 
+  // Métodos de gamificação
+  sendAchievementUnlocked(userId: string, achievementData: any) {
+    this.server.to(`user:${userId}`).emit('achievement:unlocked', {
+      type: 'achievement:unlocked',
+      data: achievementData,
+      timestamp: new Date().toISOString(),
+    });
+    this.logger.log(`Conquista desbloqueada enviada para usuário ${userId}: ${achievementData.name}`);
+  }
+
+  sendLevelUp(userId: string, levelData: any) {
+    this.server.to(`user:${userId}`).emit('gamification:level-up', {
+      type: 'gamification:level-up',
+      data: levelData,
+      timestamp: new Date().toISOString(),
+    });
+    this.logger.log(`Level up enviado para usuário ${userId}: Nível ${levelData.newLevel}`);
+  }
+
+  sendPointsEarned(userId: string, pointsData: any) {
+    this.server.to(`user:${userId}`).emit('gamification:points-earned', {
+      type: 'gamification:points-earned',
+      data: pointsData,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   // Método auxiliar para enviar notificações para proprietários/ocupantes de uma unidade
   private async sendToUnitOwners(condominiumId: string, unitId: string, event: string, data: any) {
     try {

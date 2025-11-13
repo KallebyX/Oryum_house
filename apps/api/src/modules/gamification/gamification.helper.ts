@@ -31,7 +31,7 @@ export class GamificationHelper {
   /**
    * Adicionar pontos ao criar ticket
    */
-  async onTicketCreated(condominiumId: string, userId: string, ticketId: string) {
+  async onTicketCreate(condominiumId: string, userId: string, ticketId: string) {
     try {
       await this.gamificationService.addPoints(condominiumId, {
         userId,
@@ -48,7 +48,7 @@ export class GamificationHelper {
   /**
    * Adicionar pontos ao completar ticket
    */
-  async onTicketCompleted(condominiumId: string, userId: string, ticketId: string) {
+  async onTicketComplete(condominiumId: string, userId: string, ticketId: string) {
     try {
       await this.gamificationService.addPoints(condominiumId, {
         userId,
@@ -82,7 +82,7 @@ export class GamificationHelper {
   /**
    * Adicionar pontos ao fazer reserva
    */
-  async onBookingCreated(condominiumId: string, userId: string, bookingId: string) {
+  async onBookingCreate(condominiumId: string, userId: string, bookingId: string) {
     try {
       await this.gamificationService.addPoints(condominiumId, {
         userId,
@@ -99,7 +99,7 @@ export class GamificationHelper {
   /**
    * Adicionar pontos ao votar em assembleia
    */
-  async onAssemblyVote(condominiumId: string, userId: string, assemblyId: string, itemId: string) {
+  async onAssemblyVote(condominiumId: string, userId: string, assemblyId: string) {
     try {
       await this.gamificationService.addPoints(condominiumId, {
         userId,

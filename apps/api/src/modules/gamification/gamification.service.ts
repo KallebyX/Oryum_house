@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../core/prisma/prisma.service';
+import { WebSocketGateway } from '../../core/websocket/websocket.gateway';
 import {
   AddPointsDto,
   CreateAchievementDto,
@@ -12,7 +13,10 @@ import {
 export class GamificationService {
   private readonly logger = new Logger(GamificationService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private websocketGateway: WebSocketGateway,
+  ) {}
 
   // ==========================================
   // PONTOS
@@ -32,8 +36,10 @@ export class GamificationService {
       },
     });
 
+    const oldLevel = userPoints?.level || 0;
     const newPoints = (userPoints?.points || 0) + data.points;
     const newLevel = this.calculateLevel(newPoints);
+    const leveledUp = newLevel > oldLevel;
 
     if (userPoints) {
       userPoints = await this.prisma.userPoints.update({
@@ -69,6 +75,23 @@ export class GamificationService {
     this.logger.log(
       `Pontos adicionados: ${data.points} para usuário ${data.userId} - Motivo: ${data.reason}`
     );
+
+    // Enviar notificação de pontos ganhos
+    this.websocketGateway.sendPointsEarned(data.userId, {
+      points: data.points,
+      totalPoints: newPoints,
+      reason: data.reason,
+      level: newLevel,
+    });
+
+    // Enviar notificação de level up se subiu de nível
+    if (leveledUp) {
+      this.websocketGateway.sendLevelUp(data.userId, {
+        oldLevel,
+        newLevel,
+        totalPoints: newPoints,
+      });
+    }
 
     // Verificar se desbloqueou alguma conquista
     await this.checkAndUnlockAchievements(data.userId, condominiumId);
@@ -265,7 +288,19 @@ export class GamificationService {
       },
     });
 
-    // Adicionar pontos da conquista
+    this.logger.log(`Conquista desbloqueada: ${achievement.name} por usuário ${userId}`);
+
+    // Enviar notificação em tempo real
+    this.websocketGateway.sendAchievementUnlocked(userId, {
+      achievementId: achievement.id,
+      name: achievement.name,
+      description: achievement.description,
+      category: achievement.category,
+      points: achievement.points,
+      unlockedAt: userAchievement.unlockedAt,
+    });
+
+    // Adicionar pontos da conquista (isso pode desbloquear outras conquistas)
     if (achievement.condominiumId) {
       await this.addPoints(achievement.condominiumId, {
         userId,
@@ -275,8 +310,6 @@ export class GamificationService {
         entityId: achievementId,
       });
     }
-
-    this.logger.log(`Conquista desbloqueada: ${achievement.name} por usuário ${userId}`);
 
     return userAchievement;
   }
