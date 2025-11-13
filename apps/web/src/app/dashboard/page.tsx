@@ -119,6 +119,41 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
+          {/* Gamificação */}
+          <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+            <CardHeader>
+              <CardTitle className="flex items-center text-purple-900">
+                🏆 Sua Gamificação
+              </CardTitle>
+              <CardDescription className="text-purple-700">
+                Pontos, nível e conquistas
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-purple-700 font-medium">Nível</span>
+                  <span className="text-2xl font-bold text-purple-600">7</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-purple-700 font-medium">Pontos</span>
+                  <span className="text-lg font-semibold text-pink-600">2.450</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-purple-700 font-medium">Ranking</span>
+                  <span className="text-lg font-semibold text-purple-600">#3</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-purple-700 font-medium">Conquistas</span>
+                  <span className="text-lg font-semibold text-pink-600">8/17</span>
+                </div>
+                <Button className="w-full mt-4 bg-purple-600 hover:bg-purple-700" asChild>
+                  <Link href="/dashboard/gamification">Ver Detalhes</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Assembleias */}
           <Card>
             <CardHeader>
