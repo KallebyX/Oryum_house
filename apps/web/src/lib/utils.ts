@@ -171,6 +171,15 @@ export function truncate(str: string, length: number) {
   return str.slice(0, length) + '...';
 }
 
+export function getInitials(name: string) {
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+}
+
 // Utilitários de arquivo
 export function formatFileSize(bytes: number) {
   if (bytes === 0) return '0 Bytes';
