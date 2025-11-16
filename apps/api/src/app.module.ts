@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
+import { LoggerModule } from 'nestjs-pino';
 
 // Core modules
 import { PrismaModule } from './core/prisma/prisma.module';
@@ -8,6 +10,7 @@ import { AuthModule } from './core/auth/auth.module';
 import { NotificationModule } from './core/notification/notification.module';
 import { FileUploadModule } from './core/file-upload/file-upload.module';
 import { WebSocketModule } from './core/websocket/websocket.module';
+import { CacheModule } from './core/cache/cache.module';
 
 // Feature modules
 import { CondominiumModule } from './modules/condominium/condominium.module';
@@ -56,27 +59,40 @@ import { AppService } from './app.service';
       },
     ]),
 
-    // Logging e Scheduling desabilitados temporariamente
-    // LoggerModule.forRoot({
-    //   pinoHttp: {
-    //     level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-    //     transport: process.env.NODE_ENV === 'development' 
-    //       ? {
-    //           target: 'pino-pretty',
-    //           options: {
-    //             colorize: true,
-    //             singleLine: true,
-    //             translateTime: 'SYS:dd/mm/yyyy HH:MM:ss',
-    //           },
-    //         }
-    //       : undefined,
-    //     customProps: () => ({
-    //       context: 'HTTP',
-    //     }),
-    //   },
-    // }),
+    // Logging - Now enabled with Pino
+    LoggerModule.forRoot({
+      pinoHttp: {
+        level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+        transport:
+          process.env.NODE_ENV === 'development'
+            ? {
+                target: 'pino-pretty',
+                options: {
+                  colorize: true,
+                  singleLine: true,
+                  translateTime: 'SYS:dd/mm/yyyy HH:MM:ss',
+                  ignore: 'pid,hostname',
+                },
+              }
+            : undefined,
+        customProps: () => ({
+          context: 'HTTP',
+        }),
+        serializers: {
+          req: (req) => ({
+            id: req.id,
+            method: req.method,
+            url: req.url,
+          }),
+          res: (res) => ({
+            statusCode: res.statusCode,
+          }),
+        },
+      },
+    }),
 
-    // ScheduleModule.forRoot(),
+    // Scheduling - Now enabled for cron jobs
+    ScheduleModule.forRoot(),
 
     // Core modules
     PrismaModule,
@@ -84,6 +100,7 @@ import { AppService } from './app.service';
     NotificationModule,
     FileUploadModule,
     WebSocketModule,
+    CacheModule,
 
     // Feature modules
     CondominiumModule,
