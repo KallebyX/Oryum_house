@@ -3,24 +3,78 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+
+/**
+ * Validate required environment variables
+ */
+function validateEnvironment() {
+  const required = [
+    'DATABASE_URL',
+    'JWT_SECRET',
+    'JWT_REFRESH_SECRET',
+  ];
+
+  const missing = required.filter((key) => !process.env[key]);
+
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing required environment variables: ${missing.join(', ')}\n` +
+      'Please check your .env file and ensure all required variables are set.'
+    );
+  }
+
+  // Warnings for optional but recommended variables
+  const recommended = [
+    'REDIS_HOST',
+    'REDIS_PORT',
+    'S3_ENDPOINT',
+    'S3_BUCKET',
+    'SMTP_HOST',
+  ];
+
+  const missingRecommended = recommended.filter((key) => !process.env[key]);
+  if (missingRecommended.length > 0) {
+    Logger.warn(
+      `Missing recommended environment variables: ${missingRecommended.join(', ')}`
+    );
+  }
+}
 
 async function bootstrap() {
+  // Validate environment before starting
+  validateEnvironment();
+
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
   });
 
+  const logger = new Logger('Bootstrap');
+
   // Logger
   app.useLogger(app.get(Logger));
 
+  // Global Exception Filter (catches all errors)
+  app.useGlobalFilters(new AllExceptionsFilter());
+
   // Security
-  app.use(helmet());
-  
-  // CORS
+  app.use(helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  }));
+
+  // CORS - Enhanced configuration
+  const allowedOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',')
+    : process.env.NODE_ENV === 'production'
+      ? ['https://your-domain.com']
+      : ['http://localhost:3000'];
+
   app.enableCors({
-    origin: process.env.NODE_ENV === 'production' 
-      ? ['https://your-domain.com'] 
-      : ['http://localhost:3000'],
+    origin: allowedOrigins,
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
+    exposedHeaders: ['X-Total-Count', 'X-Page', 'X-Total-Pages'],
   });
 
   // Global prefix
@@ -35,6 +89,7 @@ async function bootstrap() {
       transformOptions: {
         enableImplicitConversion: true,
       },
+      errorHttpStatusCode: 422,
     }),
   );
 
@@ -69,9 +124,14 @@ async function bootstrap() {
 
   const port = process.env.API_PORT || 3001;
   await app.listen(port);
-  
-  console.log(`🚀 API rodando em http://localhost:${port}`);
-  console.log(`📚 Documentação em http://localhost:${port}/api/docs`);
+
+  logger.log(`🚀 API rodando em http://localhost:${port}`);
+  logger.log(`📚 Documentação em http://localhost:${port}/api/docs`);
+  logger.log(`🔒 Environment: ${process.env.NODE_ENV || 'development'}`);
+  logger.log(`✅ All systems operational`);
 }
 
-bootstrap();
+bootstrap().catch((error) => {
+  Logger.error('Failed to start application', error);
+  process.exit(1);
+});

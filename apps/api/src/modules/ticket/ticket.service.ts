@@ -524,72 +524,87 @@ export class TicketService {
       baseWhere.openedById = userId;
     }
 
-    const statusCounts = await Promise.all([
-      this.prisma.ticket.count({ where: { ...baseWhere, status: TicketStatus.NOVA } }),
-      this.prisma.ticket.count({ where: { ...baseWhere, status: TicketStatus.EM_AVALIACAO } }),
-      this.prisma.ticket.count({ where: { ...baseWhere, status: TicketStatus.EM_ANDAMENTO } }),
-      this.prisma.ticket.count({ where: { ...baseWhere, status: TicketStatus.AGUARDANDO_MORADOR } }),
-      this.prisma.ticket.count({ where: { ...baseWhere, status: TicketStatus.CONCLUIDA } }),
-      this.prisma.ticket.count({ where: { ...baseWhere, status: TicketStatus.CANCELADA } }),
+    // Optimize: Use groupBy for counts and findMany in a single batch
+    const [ticketsByStatus, tickets] = await Promise.all([
+      this.prisma.ticket.groupBy({
+        by: ['status'],
+        where: baseWhere,
+        _count: {
+          status: true,
+        },
+      }),
+      this.prisma.ticket.findMany({
+        where: baseWhere,
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          category: true,
+          priority: true,
+          status: true,
+          location: true,
+          createdAt: true,
+          updatedAt: true,
+          openedBy: {
+            select: {
+              id: true,
+              name: true,
+              avatarUrl: true,
+            },
+          },
+          assignedTo: {
+            select: {
+              id: true,
+              name: true,
+              avatarUrl: true,
+            },
+          },
+          unit: {
+            select: {
+              id: true,
+              block: true,
+              number: true,
+            },
+          },
+        },
+        orderBy: [
+          { priority: 'desc' },
+          { createdAt: 'desc' },
+        ],
+      }),
     ]);
 
-    const tickets = await this.prisma.ticket.findMany({
-      where: baseWhere,
-      include: {
-        openedBy: {
-          select: {
-            id: true,
-            name: true,
-            avatarUrl: true,
-          },
-        },
-        assignedTo: {
-          select: {
-            id: true,
-            name: true,
-            avatarUrl: true,
-          },
-        },
-        unit: {
-          select: {
-            block: true,
-            number: true,
-          },
-        },
-      },
-      orderBy: [
-        { priority: 'desc' },
-        { createdAt: 'desc' },
-      ],
-    });
+    // Build counts map from groupBy result
+    const countsMap = new Map(
+      ticketsByStatus.map(group => [group.status, group._count.status])
+    );
 
-    // Agrupar por status
-    const kanban = {
-      [TicketStatus.NOVA]: {
-        count: statusCounts[0],
-        tickets: tickets.filter(t => t.status === TicketStatus.NOVA),
-      },
-      [TicketStatus.EM_AVALIACAO]: {
-        count: statusCounts[1],
-        tickets: tickets.filter(t => t.status === TicketStatus.EM_AVALIACAO),
-      },
-      [TicketStatus.EM_ANDAMENTO]: {
-        count: statusCounts[2],
-        tickets: tickets.filter(t => t.status === TicketStatus.EM_ANDAMENTO),
-      },
-      [TicketStatus.AGUARDANDO_MORADOR]: {
-        count: statusCounts[3],
-        tickets: tickets.filter(t => t.status === TicketStatus.AGUARDANDO_MORADOR),
-      },
-      [TicketStatus.CONCLUIDA]: {
-        count: statusCounts[4],
-        tickets: tickets.filter(t => t.status === TicketStatus.CONCLUIDA),
-      },
-      [TicketStatus.CANCELADA]: {
-        count: statusCounts[5],
-        tickets: tickets.filter(t => t.status === TicketStatus.CANCELADA),
-      },
-    };
+    // Group tickets by status in a single pass
+    const ticketsByStatusMap = new Map<TicketStatus, typeof tickets>();
+    for (const ticket of tickets) {
+      const statusTickets = ticketsByStatusMap.get(ticket.status) || [];
+      statusTickets.push(ticket);
+      ticketsByStatusMap.set(ticket.status, statusTickets);
+    }
+
+    // Build kanban with efficient lookup
+    const statuses = [
+      TicketStatus.NOVA,
+      TicketStatus.EM_AVALIACAO,
+      TicketStatus.EM_ANDAMENTO,
+      TicketStatus.AGUARDANDO_MORADOR,
+      TicketStatus.CONCLUIDA,
+      TicketStatus.CANCELADA,
+    ];
+
+    const kanban = {} as Record<TicketStatus, { count: number; tickets: typeof tickets }>;
+
+    for (const status of statuses) {
+      kanban[status] = {
+        count: countsMap.get(status) || 0,
+        tickets: ticketsByStatusMap.get(status) || [],
+      };
+    }
 
     return kanban;
   }
