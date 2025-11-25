@@ -1,96 +1,67 @@
-import { NextAuthOptions } from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
-import GoogleProvider from 'next-auth/providers/google';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
-export const authOptions: NextAuthOptions = {
-  providers: [
-    CredentialsProvider({
-      name: 'credentials',
-      credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Senha', type: 'password' },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null;
-        }
+/**
+ * Get the current session on the server side
+ * Use this in Server Components and API routes
+ */
+export async function getSession() {
+  return await getServerSession(authOptions);
+}
 
-        try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              email: credentials.email,
-              password: credentials.password,
-            }),
-          });
+/**
+ * Get the current user from the session
+ * Returns null if no user is logged in
+ */
+export async function getCurrentUser() {
+  const session = await getSession();
+  return session?.user || null;
+}
 
-          if (!response.ok) {
-            return null;
-          }
+/**
+ * Check if the user is authenticated
+ */
+export async function isAuthenticated() {
+  const session = await getSession();
+  return !!session?.user;
+}
 
-          const data = await response.json();
+/**
+ * Require authentication - throws error if not authenticated
+ * Use this in API routes or Server Actions
+ */
+export async function requireAuth() {
+  const session = await getSession();
+  if (!session?.user) {
+    throw new Error('Unauthorized - Please sign in');
+  }
+  return session;
+}
 
-          return {
-            id: data.user.id,
-            email: data.user.email,
-            name: data.user.name,
-            image: data.user.avatarUrl,
-            accessToken: data.accessToken,
-            memberships: data.user.memberships,
-          };
-        } catch (error) {
-          console.error('Erro na autenticação:', error);
-          return null;
-        }
-      },
-    }),
-    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
-      ? [
-          GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-          }),
-        ]
-      : []),
-  ],
-  session: {
-    strategy: 'jwt',
-    maxAge: 7 * 24 * 60 * 60, // 7 dias
-  },
-  jwt: {
-    maxAge: 7 * 24 * 60 * 60, // 7 dias
-  },
-  callbacks: {
-    async jwt({ token, user, account }) {
-      if (account && user) {
-        return {
-          ...token,
-          accessToken: user.accessToken,
-          memberships: user.memberships,
-        };
-      }
+/**
+ * Check if user has specific role
+ */
+export async function hasRole(role: string | string[]) {
+  const user = await getCurrentUser();
+  if (!user) return false;
 
-      return token;
-    },
-    async session({ session, token }) {
-      return {
-        ...session,
-        accessToken: token.accessToken,
-        user: {
-          ...session.user,
-          id: token.sub,
-          memberships: token.memberships,
-        },
-      };
-    },
-  },
-  pages: {
-    signIn: '/auth/signin',
-    signUp: '/auth/signup',
-    error: '/auth/error',
-  },
-  secret: process.env.NEXTAUTH_SECRET,
-};
+  const roles = Array.isArray(role) ? role : [role];
+  return roles.includes(user.role);
+}
+
+/**
+ * Require specific role - throws error if user doesn't have required role
+ */
+export async function requireRole(role: string | string[]) {
+  const session = await requireAuth();
+  const roles = Array.isArray(role) ? role : [role];
+
+  if (!roles.includes(session.user.role)) {
+    throw new Error('Forbidden - Insufficient permissions');
+  }
+
+  return session;
+}
+
+// Re-export authOptions for convenience
+export { authOptions } from '@/app/api/auth/[...nextauth]/route';

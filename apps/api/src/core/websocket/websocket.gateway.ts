@@ -20,9 +20,11 @@ interface AuthenticatedSocket extends Socket {
 
 @WSGateway({
   cors: {
-    origin: process.env.NODE_ENV === 'production' 
-      ? ['https://your-domain.com'] 
-      : ['http://localhost:3000'],
+    origin: process.env.CORS_ORIGINS
+      ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
+      : process.env.NODE_ENV === 'production'
+        ? (() => { throw new Error('CORS_ORIGINS must be set in production for WebSocket'); })()
+        : ['http://localhost:3000'],
     credentials: true,
   },
   namespace: '/ws',

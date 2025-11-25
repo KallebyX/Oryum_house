@@ -63,11 +63,22 @@ async function bootstrap() {
   }));
 
   // CORS - Enhanced configuration
-  const allowedOrigins = process.env.CORS_ORIGINS
-    ? process.env.CORS_ORIGINS.split(',')
-    : process.env.NODE_ENV === 'production'
-      ? ['https://your-domain.com']
-      : ['http://localhost:3000'];
+  let allowedOrigins: string[];
+
+  if (process.env.CORS_ORIGINS) {
+    // Use configured CORS origins
+    allowedOrigins = process.env.CORS_ORIGINS.split(',').map(origin => origin.trim());
+  } else if (process.env.NODE_ENV === 'production') {
+    // In production, CORS_ORIGINS must be explicitly set
+    throw new Error(
+      'CORS_ORIGINS environment variable is required in production.\n' +
+      'Please set CORS_ORIGINS in your .env file with comma-separated allowed origins.\n' +
+      'Example: CORS_ORIGINS=https://your-domain.com,https://www.your-domain.com'
+    );
+  } else {
+    // Development default
+    allowedOrigins = ['http://localhost:3000'];
+  }
 
   app.enableCors({
     origin: allowedOrigins,
