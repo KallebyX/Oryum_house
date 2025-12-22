@@ -385,7 +385,7 @@ export class ReportService {
   }
 
   /**
-   * Get financial report (placeholder)
+   * Get financial report (basic implementation with booking revenue)
    */
   async getFinancialReport(
     condominiumId: string,
@@ -400,12 +400,64 @@ export class ReportService {
       throw new NotFoundException('Condominium not found');
     }
 
-    // Placeholder: Financial module not implemented yet
+    const where: any = {
+      condominiumId,
+      status: 'APPROVED',
+      ...(query.startDate && {
+        startTime: { gte: new Date(query.startDate) },
+      }),
+      ...(query.endDate && {
+        startTime: {
+          ...((query.startDate && { gte: new Date(query.startDate) }) || {}),
+          lte: new Date(query.endDate),
+        },
+      }),
+    };
+
+    // Calculate revenue from bookings with fees
+    const bookingsWithFees = await this.prisma.booking.findMany({
+      where,
+      include: {
+        area: {
+          select: {
+            fee: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    let totalRevenue = 0;
+    const revenueByArea: Record<string, { name: string; revenue: number; count: number }> = {};
+
+    bookingsWithFees.forEach((booking) => {
+      const fee = booking.area?.fee ? Number(booking.area.fee) : 0;
+      totalRevenue += fee;
+
+      if (booking.area) {
+        if (!revenueByArea[booking.areaId]) {
+          revenueByArea[booking.areaId] = {
+            name: booking.area.name,
+            revenue: 0,
+            count: 0,
+          };
+        }
+        revenueByArea[booking.areaId].revenue += fee;
+        revenueByArea[booking.areaId].count += 1;
+      }
+    });
+
+    const topRevenueAreas = Object.values(revenueByArea)
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5);
+
     return {
-      totalRevenue: 0,
+      totalRevenue,
       totalExpenses: 0,
-      balance: 0,
-      note: 'Financial module not implemented yet. This is a placeholder.',
+      balance: totalRevenue,
+      revenueByArea: topRevenueAreas,
+      totalBookings: bookingsWithFees.length,
+      note: 'Relatorio basico com receitas de reservas. Modulo financeiro completo em desenvolvimento.',
     };
   }
 
@@ -573,15 +625,107 @@ export class ReportService {
     condominiumId: string,
     query: TimeSeriesReportDto,
   ): Promise<ActivityReportDto> {
-    // This would require complex date grouping logic
-    // For now, we'll return empty arrays as placeholders
-    // In a real implementation, you would use raw SQL or aggregation pipelines
+    const startDate = query.startDate ? new Date(query.startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const endDate = query.endDate ? new Date(query.endDate) : new Date();
+    const groupBy = query.groupBy || 'day';
+
+    // Helper function to group dates
+    const getDateKey = (date: Date): string => {
+      switch (groupBy) {
+        case 'hour':
+          return `${date.toISOString().slice(0, 13)}:00`;
+        case 'day':
+          return date.toISOString().slice(0, 10);
+        case 'week':
+          const weekStart = new Date(date);
+          weekStart.setDate(date.getDate() - date.getDay());
+          return weekStart.toISOString().slice(0, 10);
+        case 'month':
+          return date.toISOString().slice(0, 7);
+        default:
+          return date.toISOString().slice(0, 10);
+      }
+    };
+
+    // Initialize data maps
+    const ticketsCreatedMap: Record<string, number> = {};
+    const ticketsResolvedMap: Record<string, number> = {};
+    const bookingsMap: Record<string, number> = {};
+    const noticesMap: Record<string, number> = {};
+
+    // Fetch all data in parallel
+    const [tickets, resolvedTickets, bookings, notices] = await Promise.all([
+      this.prisma.ticket.findMany({
+        where: {
+          condominiumId,
+          createdAt: { gte: startDate, lte: endDate },
+        },
+        select: { createdAt: true },
+      }),
+      this.prisma.ticket.findMany({
+        where: {
+          condominiumId,
+          status: 'CONCLUIDA',
+          closedAt: { gte: startDate, lte: endDate },
+        },
+        select: { closedAt: true },
+      }),
+      this.prisma.booking.findMany({
+        where: {
+          condominiumId,
+          createdAt: { gte: startDate, lte: endDate },
+        },
+        select: { createdAt: true },
+      }),
+      this.prisma.notice.findMany({
+        where: {
+          condominiumId,
+          publishedAt: { gte: startDate, lte: endDate },
+        },
+        select: { publishedAt: true },
+      }),
+    ]);
+
+    // Group tickets created
+    tickets.forEach((ticket) => {
+      const key = getDateKey(ticket.createdAt);
+      ticketsCreatedMap[key] = (ticketsCreatedMap[key] || 0) + 1;
+    });
+
+    // Group resolved tickets
+    resolvedTickets.forEach((ticket) => {
+      if (ticket.closedAt) {
+        const key = getDateKey(ticket.closedAt);
+        ticketsResolvedMap[key] = (ticketsResolvedMap[key] || 0) + 1;
+      }
+    });
+
+    // Group bookings
+    bookings.forEach((booking) => {
+      const key = getDateKey(booking.createdAt);
+      bookingsMap[key] = (bookingsMap[key] || 0) + 1;
+    });
+
+    // Group notices
+    notices.forEach((notice) => {
+      if (notice.publishedAt) {
+        const key = getDateKey(notice.publishedAt);
+        noticesMap[key] = (noticesMap[key] || 0) + 1;
+      }
+    });
+
+    // Convert maps to arrays sorted by date
+    const mapToArray = (map: Record<string, number>): TimeSeriesDataPointDto[] => {
+      return Object.entries(map)
+        .map(([date, value]) => ({ date, value }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+    };
 
     return {
-      ticketsCreated: [],
-      ticketsResolved: [],
-      bookings: [],
-      notices: [],
+      ticketsCreated: mapToArray(ticketsCreatedMap),
+      ticketsResolved: mapToArray(ticketsResolvedMap),
+      bookings: mapToArray(bookingsMap),
+      notices: mapToArray(noticesMap),
     };
   }
 

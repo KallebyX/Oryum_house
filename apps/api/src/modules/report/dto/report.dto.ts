@@ -280,30 +280,45 @@ export class MaintenanceStatsReportDto {
 }
 
 /**
- * Response DTO for financial overview (placeholder)
+ * Response DTO for financial overview
  */
 export class FinancialReportDto {
   @ApiProperty({
-    description: 'Receitas totais (placeholder)',
+    description: 'Receitas totais',
     example: 50000,
   })
   totalRevenue: number;
 
   @ApiProperty({
-    description: 'Despesas totais (placeholder)',
+    description: 'Despesas totais',
     example: 35000,
   })
   totalExpenses: number;
 
   @ApiProperty({
-    description: 'Saldo (placeholder)',
+    description: 'Saldo',
     example: 15000,
   })
   balance: number;
 
+  @ApiPropertyOptional({
+    description: 'Receita por area',
+    example: [
+      { name: 'Salao de Festas', revenue: 1800, count: 10 },
+      { name: 'Churrasqueira', revenue: 750, count: 15 },
+    ],
+  })
+  revenueByArea?: Array<{ name: string; revenue: number; count: number }>;
+
+  @ApiPropertyOptional({
+    description: 'Total de reservas no periodo',
+    example: 45,
+  })
+  totalBookings?: number;
+
   @ApiProperty({
     description: 'Mensagem de aviso',
-    example: 'Financial module not implemented yet',
+    example: 'Relatorio basico com receitas de reservas',
   })
   note: string;
 }
@@ -391,10 +406,10 @@ export class IncidentStatsReportDto {
  */
 export class TimeSeriesDataPointDto {
   @ApiProperty({
-    description: 'Período (data)',
-    example: '2024-01',
+    description: 'Data do periodo',
+    example: '2024-01-15',
   })
-  period: string;
+  date: string;
 
   @ApiProperty({
     description: 'Valor',

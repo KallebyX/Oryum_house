@@ -14,6 +14,7 @@ declare module 'next-auth' {
       avatarUrl?: string;
     };
     accessToken: string;
+    error?: string;
   }
 
   /**
@@ -42,5 +43,7 @@ declare module 'next-auth/jwt' {
     avatarUrl?: string;
     accessToken: string;
     refreshToken: string;
+    accessTokenExpires?: number;
+    error?: string;
   }
 }
