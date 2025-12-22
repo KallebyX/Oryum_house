@@ -1,5 +1,5 @@
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth-options';
 
 /**
  * Get the current session on the server side
@@ -64,4 +64,4 @@ export async function requireRole(role: string | string[]) {
 }
 
 // Re-export authOptions for convenience
-export { authOptions } from '@/app/api/auth/[...nextauth]/route';
+export { authOptions } from '@/lib/auth-options';

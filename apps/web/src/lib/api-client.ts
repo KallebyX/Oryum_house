@@ -33,12 +33,17 @@ apiClient.interceptors.request.use(
   }
 );
 
+interface ApiErrorData {
+  message?: string;
+  details?: unknown;
+}
+
 /**
  * Response interceptor for error handling
  */
 apiClient.interceptors.response.use(
   (response) => response,
-  async (error: AxiosError) => {
+  async (error: AxiosError<ApiErrorData>) => {
     // Handle 401 Unauthorized
     if (error.response?.status === 401) {
       // Redirect to login or refresh token

@@ -1,12 +1,12 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { QueryProvider } from '@/components/providers/query-provider';
 import { AuthProvider } from '@/components/providers/auth-provider';
 import { ToastProvider } from '@/components/providers/toast-provider';
 import './globals.css';
 
-const inter = Inter({ subsets: ['latin'] });
+// Using system font stack for reliability and performance
+const fontClassName = 'font-sans';
 
 export const metadata: Metadata = {
   title: {
@@ -111,7 +111,7 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#0ea5e9" />
         <meta name="theme-color" content="#0ea5e9" />
       </head>
-      <body className={inter.className}>
+      <body className={fontClassName}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

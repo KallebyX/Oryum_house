@@ -4,19 +4,21 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  Building2, 
-  ArrowLeft, 
-  Calculator, 
-  TrendingUp, 
-  Clock, 
+import {
+  Building2,
+  ArrowLeft,
+  ArrowRight,
+  Calculator,
+  TrendingUp,
+  Clock,
   Users,
   CheckCircle,
   AlertCircle,
   Calendar,
   MessageSquare,
   FileText,
-  BarChart3
+  BarChart3,
+  Phone
 } from 'lucide-react';
 
 export default function DemoPage() {

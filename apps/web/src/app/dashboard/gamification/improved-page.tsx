@@ -182,7 +182,7 @@ export default function GamificationPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 {achievements.map((achievement) => {
                   const Icon = achievement.icon;
-                  const styles = rarityStyles[achievement.rarity];
+                  const styles = rarityStyles[achievement.rarity as keyof typeof rarityStyles];
 
                   return (
                     <div
