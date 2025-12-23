@@ -6,21 +6,57 @@ import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 /**
+ * Generate a random secret for non-production environments
+ */
+function generateFallbackSecret(name: string): string {
+  const crypto = require('crypto');
+  const secret = crypto.randomBytes(32).toString('hex');
+  Logger.warn(
+    `⚠️  Using auto-generated ${name} for non-production environment. ` +
+    `Set ${name} environment variable for consistent JWT validation across deployments.`,
+    'Environment'
+  );
+  return secret;
+}
+
+/**
  * Validate required environment variables
  */
 function validateEnvironment() {
-  const required = [
-    'DATABASE_URL',
-    'JWT_SECRET',
-    'JWT_REFRESH_SECRET',
-  ];
+  const isProduction = process.env.NODE_ENV === 'production';
+  const isVercelProduction = process.env.VERCEL_ENV === 'production';
+  const isStrictMode = isProduction && isVercelProduction;
+
+  // In strict production mode (Vercel production), all secrets are required
+  // In preview/development, we can auto-generate fallback secrets
+  const required = ['DATABASE_URL'];
+
+  // JWT secrets are required in strict production mode only
+  if (isStrictMode) {
+    required.push('JWT_SECRET', 'JWT_REFRESH_SECRET');
+  } else {
+    // For preview/development, provide fallbacks if not set
+    if (!process.env.JWT_SECRET) {
+      process.env.JWT_SECRET = generateFallbackSecret('JWT_SECRET');
+    }
+    if (!process.env.JWT_REFRESH_SECRET) {
+      process.env.JWT_REFRESH_SECRET = generateFallbackSecret('JWT_REFRESH_SECRET');
+    }
+  }
 
   const missing = required.filter((key) => !process.env[key]);
 
   if (missing.length > 0) {
+    const vercelNote = process.env.VERCEL
+      ? '\n\n📋 Vercel Deployment: Add these variables in your Vercel project settings:\n' +
+        '   Dashboard → Settings → Environment Variables\n' +
+        '   Make sure to add them for Production, Preview, and Development environments.'
+      : '';
+
     throw new Error(
       `Missing required environment variables: ${missing.join(', ')}\n` +
-      'Please check your .env file and ensure all required variables are set.'
+      'Please check your .env file and ensure all required variables are set.' +
+      vercelNote
     );
   }
 
@@ -62,14 +98,43 @@ async function bootstrap() {
     crossOriginResourcePolicy: { policy: 'cross-origin' },
   }));
 
-  // CORS - Enhanced configuration
-  let allowedOrigins: string[];
+  // CORS - Enhanced configuration with Vercel support
+  let allowedOrigins: string[] | ((origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => void);
 
   if (process.env.CORS_ORIGINS) {
     // Use configured CORS origins
     allowedOrigins = process.env.CORS_ORIGINS.split(',').map(origin => origin.trim());
+  } else if (process.env.VERCEL) {
+    // On Vercel, dynamically allow Vercel preview URLs and the production URL
+    const vercelUrl = process.env.VERCEL_URL;
+    const vercelEnv = process.env.VERCEL_ENV;
+
+    logger.log(`🌐 Vercel environment detected: ${vercelEnv}`);
+
+    // Dynamic origin validation for Vercel deployments
+    allowedOrigins = (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      // Allow requests with no origin (like mobile apps or curl)
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      // Allow Vercel preview/production URLs
+      const isVercelUrl = origin.includes('.vercel.app') || origin.includes('.vercel.sh');
+      const isLocalhost = origin.includes('localhost') || origin.includes('127.0.0.1');
+
+      if (isVercelUrl || isLocalhost) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    };
+
+    if (vercelUrl) {
+      logger.log(`🔗 Vercel URL: https://${vercelUrl}`);
+    }
   } else if (process.env.NODE_ENV === 'production') {
-    // In production, CORS_ORIGINS must be explicitly set
+    // In non-Vercel production, CORS_ORIGINS must be explicitly set
     throw new Error(
       'CORS_ORIGINS environment variable is required in production.\n' +
       'Please set CORS_ORIGINS in your .env file with comma-separated allowed origins.\n' +
