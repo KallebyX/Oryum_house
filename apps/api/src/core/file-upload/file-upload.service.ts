@@ -11,22 +11,27 @@ import { exec } from 'child_process';
 const execAsync = promisify(exec);
 
 // Lazy load sharp to prevent crashes if native bindings are unavailable
-let sharpModule: typeof import('sharp') | null = null;
+import type sharp from 'sharp';
+type SharpInstance = typeof sharp;
+
+let sharpInstance: SharpInstance | null = null;
 let sharpLoadError: Error | null = null;
 
-async function getSharp(): Promise<typeof import('sharp')> {
+async function getSharp(): Promise<SharpInstance> {
   if (sharpLoadError) {
     throw sharpLoadError;
   }
-  if (!sharpModule) {
+  if (!sharpInstance) {
     try {
-      sharpModule = await import('sharp');
+      const sharpModule = await import('sharp');
+      // Handle both ESM and CommonJS module resolution
+      sharpInstance = (sharpModule.default || sharpModule) as SharpInstance;
     } catch (error) {
       sharpLoadError = error as Error;
       throw error;
     }
   }
-  return sharpModule;
+  return sharpInstance;
 }
 
 interface UploadResult {
@@ -243,7 +248,7 @@ export class FileUploadService {
   ): Promise<string> {
     try {
       const sharp = await getSharp();
-      const thumbnailBuffer = await sharp.default(file.buffer)
+      const thumbnailBuffer = await sharp(file.buffer)
         .resize(300, 300, {
           fit: 'inside',
           withoutEnlargement: true,
