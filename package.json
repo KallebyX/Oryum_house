@@ -22,6 +22,9 @@
     "db:migrate": "cd apps/api && npm run db:migrate",
     "db:studio": "cd apps/api && npm run db:studio"
   },
+  "optionalDependencies": {
+    "@img/sharp-linux-x64": "^0.33.0"
+  },
   "devDependencies": {
     "@commitlint/cli": "^18.4.3",
     "@commitlint/config-conventional": "^18.4.3",
