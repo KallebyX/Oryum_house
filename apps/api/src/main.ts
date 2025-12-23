@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
+import { Logger as PinoLogger } from 'nestjs-pino';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
@@ -102,8 +103,8 @@ async function bootstrap() {
 
   const logger = new Logger('Bootstrap');
 
-  // Logger
-  app.useLogger(app.get(Logger));
+  // Logger - Use Pino logger from nestjs-pino
+  app.useLogger(app.get(PinoLogger));
 
   // Global Exception Filter (catches all errors)
   app.useGlobalFilters(new AllExceptionsFilter());
