@@ -420,7 +420,7 @@ export class ReportService {
       include: {
         area: {
           select: {
-            fee: true,
+            feePlaceholder: true,
             name: true,
           },
         },
@@ -431,7 +431,7 @@ export class ReportService {
     const revenueByArea: Record<string, { name: string; revenue: number; count: number }> = {};
 
     bookingsWithFees.forEach((booking) => {
-      const fee = booking.area?.fee ? Number(booking.area.fee) : 0;
+      const fee = booking.area?.feePlaceholder ? Number(booking.area.feePlaceholder) : 0;
       totalRevenue += fee;
 
       if (booking.area) {
@@ -528,11 +528,11 @@ export class ReportService {
       topUnitsData.map(async (item) => {
         const unit = await this.prisma.unit.findUnique({
           where: { id: item.unitId },
-          select: { identifier: true },
+          select: { block: true, number: true },
         });
         return {
           unitId: item.unitId,
-          identifier: unit?.identifier || 'Unknown',
+          identifier: unit ? `${unit.block}-${unit.number}` : 'Unknown',
           count: item._count,
         };
       }),

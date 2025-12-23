@@ -335,14 +335,8 @@ export class GamificationService {
               name: true,
               email: true,
               avatarUrl: true,
-            },
-          },
-          _count: {
-            select: {
-              user: {
-                select: {
-                  achievements: true,
-                },
+              achievements: {
+                select: { id: true },
               },
             },
           },

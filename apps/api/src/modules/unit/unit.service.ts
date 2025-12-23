@@ -30,18 +30,18 @@ export class UnitService {
       throw new NotFoundException('Condominium not found');
     }
 
-    // Check if unit identifier already exists in this condominium
+    // Check if unit already exists in this condominium (block + number must be unique)
     const existingUnit = await this.prisma.unit.findFirst({
       where: {
         condominiumId,
-        identifier: createUnitDto.identifier,
-        block: createUnitDto.block || null,
+        block: createUnitDto.block,
+        number: createUnitDto.number,
       },
     });
 
     if (existingUnit) {
       throw new ConflictException(
-        'Unit with this identifier already exists in this condominium'
+        'Unit with this block and number already exists in this condominium'
       );
     }
 
@@ -67,7 +67,7 @@ export class UnitService {
    * Find all units in a condominium with filters and pagination
    */
   async findAll(condominiumId: string, query: QueryUnitDto) {
-    const { search, block, floor, page = 1, limit = 10 } = query;
+    const { search, block, page = 1, limit = 10 } = query;
 
     // Check if condominium exists
     const condominium = await this.prisma.condominium.findUnique({
@@ -82,12 +82,11 @@ export class UnitService {
       condominiumId,
       ...(search && {
         OR: [
-          { identifier: { contains: search, mode: 'insensitive' } },
+          { number: { contains: search, mode: 'insensitive' } },
           { block: { contains: search, mode: 'insensitive' } },
         ],
       }),
       ...(block && { block: { equals: block, mode: 'insensitive' } }),
-      ...(floor !== undefined && { floor }),
     };
 
     const [units, total] = await Promise.all([
@@ -95,7 +94,7 @@ export class UnitService {
         where,
         skip: (page - 1) * limit,
         take: limit,
-        orderBy: [{ block: 'asc' }, { floor: 'asc' }, { identifier: 'asc' }],
+        orderBy: [{ block: 'asc' }, { number: 'asc' }],
         include: {
           owner: {
             select: {
@@ -109,7 +108,7 @@ export class UnitService {
           _count: {
             select: {
               occupants: true,
-              createdTickets: true,
+              tickets: true,
               deliveries: true,
             },
           },
@@ -143,7 +142,10 @@ export class UnitService {
           select: {
             id: true,
             name: true,
-            address: true,
+            street: true,
+            number: true,
+            city: true,
+            state: true,
           },
         },
         owner: {
@@ -166,7 +168,7 @@ export class UnitService {
         },
         _count: {
           select: {
-            createdTickets: true,
+            tickets: true,
             deliveries: true,
             visitorPasses: true,
           },
@@ -200,20 +202,20 @@ export class UnitService {
       throw new NotFoundException('Unit not found');
     }
 
-    // Check if new identifier conflicts with another unit
-    if (updateUnitDto.identifier || updateUnitDto.block) {
+    // Check if new block/number conflicts with another unit
+    if (updateUnitDto.number || updateUnitDto.block) {
       const conflictingUnit = await this.prisma.unit.findFirst({
         where: {
           condominiumId,
-          identifier: updateUnitDto.identifier || existingUnit.identifier,
-          block: updateUnitDto.block !== undefined ? updateUnitDto.block : existingUnit.block,
+          block: updateUnitDto.block ?? existingUnit.block,
+          number: updateUnitDto.number ?? existingUnit.number,
           id: { not: id },
         },
       });
 
       if (conflictingUnit) {
         throw new ConflictException(
-          'Unit with this identifier already exists in this condominium'
+          'Unit with this block and number already exists in this condominium'
         );
       }
     }
@@ -256,7 +258,7 @@ export class UnitService {
       select: {
         _count: {
           select: {
-            createdTickets: true,
+            tickets: true,
             deliveries: true,
             visitorPasses: true,
           },
@@ -266,7 +268,7 @@ export class UnitService {
 
     if (
       hasActiveRelations &&
-      (hasActiveRelations._count.createdTickets > 0 ||
+      (hasActiveRelations._count.tickets > 0 ||
         hasActiveRelations._count.deliveries > 0 ||
         hasActiveRelations._count.visitorPasses > 0)
     ) {
@@ -513,12 +515,18 @@ export class UnitService {
 
     const [
       totalTickets,
+      totalBookings,
       totalDeliveries,
       totalVisitors,
       occupants,
     ] = await Promise.all([
       // Total tickets
       this.prisma.ticket.count({
+        where: { unitId: id },
+      }),
+
+      // Total bookings
+      this.prisma.booking.count({
         where: { unitId: id },
       }),
 
@@ -544,27 +552,6 @@ export class UnitService {
         },
       }),
     ]);
-
-    // Count bookings through unit's condominium members
-    const unitMembers = await this.prisma.unit.findUnique({
-      where: { id },
-      select: {
-        owner: { select: { id: true } },
-        occupants: { select: { id: true } },
-      },
-    });
-
-    const memberIds = [
-      ...(unitMembers?.owner ? [unitMembers.owner.id] : []),
-      ...(unitMembers?.occupants.map((o) => o.id) || []),
-    ];
-
-    const totalBookings = await this.prisma.booking.count({
-      where: {
-        bookedById: { in: memberIds },
-        area: { condominiumId },
-      },
-    });
 
     return {
       totalTickets,

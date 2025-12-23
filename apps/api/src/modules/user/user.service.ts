@@ -100,7 +100,6 @@ export class UserService {
           _count: {
             select: {
               memberships: true,
-              createdTickets: true,
             },
           },
         },
@@ -145,18 +144,10 @@ export class UserService {
                 logoUrl: true,
               },
             },
-            unit: {
-              select: {
-                id: true,
-                identifier: true,
-                block: true,
-              },
-            },
           },
         },
         _count: {
           select: {
-            createdTickets: true,
             bookings: true,
             ownedUnits: true,
           },
@@ -357,16 +348,11 @@ export class UserService {
           select: {
             id: true,
             name: true,
-            address: true,
+            street: true,
+            number: true,
+            city: true,
+            state: true,
             logoUrl: true,
-          },
-        },
-        unit: {
-          select: {
-            id: true,
-            identifier: true,
-            block: true,
-            floor: true,
           },
         },
       },
@@ -397,21 +383,6 @@ export class UserService {
       throw new NotFoundException('Condominium not found');
     }
 
-    // Check if unit exists (if provided)
-    if (addToCondominiumDto.unitId) {
-      const unit = await this.prisma.unit.findUnique({
-        where: { id: addToCondominiumDto.unitId },
-      });
-
-      if (!unit) {
-        throw new NotFoundException('Unit not found');
-      }
-
-      if (unit.condominiumId !== addToCondominiumDto.condominiumId) {
-        throw new BadRequestException('Unit does not belong to this condominium');
-      }
-    }
-
     // Check if membership already exists
     const existingMembership = await this.prisma.membership.findFirst({
       where: {
@@ -428,11 +399,9 @@ export class UserService {
           data: {
             isActive: true,
             role: addToCondominiumDto.role,
-            unitId: addToCondominiumDto.unitId,
           },
           include: {
             condominium: true,
-            unit: true,
           },
         });
         return membership;
@@ -447,11 +416,9 @@ export class UserService {
         userId: id,
         condominiumId: addToCondominiumDto.condominiumId,
         role: addToCondominiumDto.role,
-        unitId: addToCondominiumDto.unitId,
       },
       include: {
         condominium: true,
-        unit: true,
       },
     });
 
@@ -512,12 +479,12 @@ export class UserService {
 
       // Total tickets created
       this.prisma.ticket.count({
-        where: { createdById: id },
+        where: { openedById: id },
       }),
 
       // Total bookings
       this.prisma.booking.count({
-        where: { bookedById: id },
+        where: { requestedById: id },
       }),
 
       // Total votes in assemblies
@@ -526,10 +493,10 @@ export class UserService {
       }),
 
       // Gamification data
-      this.prisma.gamificationProfile.findUnique({
+      this.prisma.userPoints.findFirst({
         where: { userId: id },
         select: {
-          totalPoints: true,
+          points: true,
           level: true,
         },
       }),
@@ -540,7 +507,7 @@ export class UserService {
       totalTickets,
       totalBookings,
       totalVotes,
-      gamificationPoints: gamificationData?.totalPoints || 0,
+      gamificationPoints: gamificationData?.points || 0,
       gamificationLevel: gamificationData?.level || 1,
     };
   }

@@ -15,33 +15,22 @@ import { Transform } from 'class-transformer';
  */
 export class CreateUnitDto {
   @ApiProperty({
-    description: 'Identificador da unidade (ex: 101, 202, A-12)',
+    description: 'Bloco/Torre da unidade',
+    example: 'A',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(50)
+  block: string;
+
+  @ApiProperty({
+    description: 'Número da unidade',
     example: '101',
   })
   @IsString()
   @IsNotEmpty()
   @MaxLength(50)
-  identifier: string;
-
-  @ApiPropertyOptional({
-    description: 'Bloco/Torre da unidade',
-    example: 'Bloco A',
-  })
-  @IsOptional()
-  @IsString()
-  @MaxLength(50)
-  block?: string;
-
-  @ApiPropertyOptional({
-    description: 'Andar da unidade',
-    example: 10,
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Max(200)
-  @Transform(({ value }) => (value ? parseInt(value, 10) : undefined))
-  floor?: number;
+  number: string;
 
   @ApiPropertyOptional({
     description: 'Área da unidade em m²',
@@ -51,38 +40,7 @@ export class CreateUnitDto {
   @IsNumber()
   @Min(0)
   @Transform(({ value }) => (value ? parseFloat(value) : undefined))
-  area?: number;
-
-  @ApiPropertyOptional({
-    description: 'Número de quartos',
-    example: 3,
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Max(50)
-  @Transform(({ value }) => (value ? parseInt(value, 10) : undefined))
-  bedrooms?: number;
-
-  @ApiPropertyOptional({
-    description: 'Número de vagas de garagem',
-    example: 2,
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Max(20)
-  @Transform(({ value }) => (value ? parseInt(value, 10) : undefined))
-  parkingSpots?: number;
-
-  @ApiPropertyOptional({
-    description: 'Observações adicionais',
-    example: 'Unidade com vista para o mar',
-  })
-  @IsOptional()
-  @IsString()
-  @MaxLength(1000)
-  notes?: string;
+  areaM2?: number;
 }
 
 /**
@@ -95,7 +53,7 @@ export class UpdateUnitDto extends PartialType(CreateUnitDto) {}
  */
 export class QueryUnitDto {
   @ApiPropertyOptional({
-    description: 'Busca por identificador ou bloco',
+    description: 'Busca por número ou bloco',
     example: '101',
   })
   @IsOptional()
@@ -104,20 +62,11 @@ export class QueryUnitDto {
 
   @ApiPropertyOptional({
     description: 'Filtrar por bloco',
-    example: 'Bloco A',
+    example: 'A',
   })
   @IsOptional()
   @IsString()
   block?: string;
-
-  @ApiPropertyOptional({
-    description: 'Filtrar por andar',
-    example: 10,
-  })
-  @IsOptional()
-  @Transform(({ value }) => parseInt(value, 10))
-  @IsNumber()
-  floor?: number;
 
   @ApiPropertyOptional({
     description: 'Número da página',

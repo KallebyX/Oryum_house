@@ -36,13 +36,10 @@ export const ThrottleVeryStrict = () => Throttle({ default: { limit: 10, ttl: 60
 
 /**
  * Auth rate limit (for login endpoints)
- * 5 attempts per minute, 20 per hour
+ * 5 attempts per minute
  */
 export const ThrottleAuth = () =>
-  Throttle([
-    { name: 'short', limit: 5, ttl: 60000 }, // 5 per minute
-    { name: 'long', limit: 20, ttl: 3600000 }, // 20 per hour
-  ]);
+  Throttle({ default: { limit: 5, ttl: 60000 } });
 
 /**
  * File upload rate limit

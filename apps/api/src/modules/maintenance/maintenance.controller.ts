@@ -105,7 +105,7 @@ export class MaintenanceController {
   // ==================== MAINTENANCE EXECUTIONS ====================
 
   @Post('executions')
-  @Roles(UserRole.ADMIN_GLOBAL, UserRole.SINDICO, UserRole.FUNCIONARIO)
+  @Roles(UserRole.ADMIN_GLOBAL, UserRole.SINDICO, UserRole.ZELADOR)
   @RequireCondominium()
   @ApiOperation({ summary: 'Create a maintenance execution (ADMIN/SINDICO/FUNCIONARIO)' })
   @ApiResponse({ status: 201, description: 'Maintenance execution created successfully' })
@@ -142,7 +142,7 @@ export class MaintenanceController {
   }
 
   @Patch('executions/:id')
-  @Roles(UserRole.ADMIN_GLOBAL, UserRole.SINDICO, UserRole.FUNCIONARIO)
+  @Roles(UserRole.ADMIN_GLOBAL, UserRole.SINDICO, UserRole.ZELADOR)
   @RequireCondominium()
   @ApiOperation({ summary: 'Update maintenance execution (ADMIN/SINDICO/FUNCIONARIO)' })
   @ApiResponse({ status: 200, description: 'Maintenance execution updated successfully' })

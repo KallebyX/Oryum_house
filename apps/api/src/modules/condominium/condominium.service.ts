@@ -97,7 +97,7 @@ export class CondominiumService {
       include: {
         units: {
           take: 5,
-          orderBy: { identifier: 'asc' },
+          orderBy: { number: 'asc' },
         },
         memberships: {
           where: { isActive: true },
@@ -268,10 +268,10 @@ export class CondominiumService {
         where: {
           condominiumId: id,
           status: TicketStatus.CONCLUIDA,
-          satisfactionRating: { not: null },
+          satisfactionScore: { not: null },
         },
         select: {
-          satisfactionRating: true,
+          satisfactionScore: true,
         },
       }),
     ]);
@@ -279,7 +279,7 @@ export class CondominiumService {
     // Calculate average satisfaction
     const averageSatisfaction =
       ticketsWithRating.length > 0
-        ? ticketsWithRating.reduce((sum, t) => sum + (t.satisfactionRating || 0), 0) /
+        ? ticketsWithRating.reduce((sum, t) => sum + (t.satisfactionScore || 0), 0) /
           ticketsWithRating.length
         : 0;
 

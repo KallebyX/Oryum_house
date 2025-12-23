@@ -26,6 +26,7 @@ export class ReportDateRangeDto {
  * Enum for report grouping periods
  */
 export enum ReportGroupBy {
+  HOUR = 'hour',
   DAY = 'day',
   WEEK = 'week',
   MONTH = 'month',
