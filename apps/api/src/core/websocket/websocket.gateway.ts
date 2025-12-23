@@ -18,13 +18,56 @@ interface AuthenticatedSocket extends Socket {
   condominiumIds?: string[];
 }
 
+// Helper function to determine WebSocket CORS origins
+const getWebSocketOrigins = (): string[] | boolean => {
+  // If CORS_ORIGINS is explicitly set, use it
+  if (process.env.CORS_ORIGINS) {
+    return process.env.CORS_ORIGINS.split(',').map(origin => origin.trim());
+  }
+
+  // In development, allow localhost
+  if (process.env.NODE_ENV !== 'production') {
+    return ['http://localhost:3000'];
+  }
+
+  // In production on Vercel, derive origins from Vercel environment variables
+  const vercelUrl = process.env.VERCEL_URL;
+  const vercelProductionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+
+  const origins: string[] = [];
+
+  if (vercelUrl) {
+    origins.push(`https://${vercelUrl}`);
+  }
+
+  if (vercelProductionUrl) {
+    origins.push(`https://${vercelProductionUrl}`);
+  }
+
+  // Also allow common Vercel preview/production URLs
+  if (vercelUrl || vercelProductionUrl) {
+    // Add any custom domains if NEXT_PUBLIC_API_URL is set
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (apiUrl) {
+      try {
+        const url = new URL(apiUrl);
+        origins.push(url.origin);
+      } catch {
+        // Invalid URL, skip
+      }
+    }
+    return origins.length > 0 ? origins : false;
+  }
+
+  // Fallback: in production without any config, disable WebSocket CORS (no origins allowed)
+  // This prevents the app from crashing while still being secure
+  console.warn('WebSocket: No CORS_ORIGINS configured in production. WebSocket will have restricted CORS.');
+  return false;
+};
+
 @WSGateway({
   cors: {
-    origin: process.env.CORS_ORIGINS
-      ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
-      : process.env.NODE_ENV === 'production'
-        ? (() => { throw new Error('CORS_ORIGINS must be set in production for WebSocket'); })()
-        : ['http://localhost:3000'],
+    origin: getWebSocketOrigins(),
     credentials: true,
   },
   namespace: '/ws',
