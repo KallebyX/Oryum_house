@@ -7,7 +7,11 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { Prisma } from '@prisma/client';
+import {
+  PrismaClientKnownRequestError,
+  PrismaClientValidationError,
+  PrismaClientUnknownRequestError,
+} from '@prisma/client/runtime/library';
 
 /**
  * Error response interface
@@ -117,18 +121,18 @@ export class AllExceptionsFilter implements ExceptionFilter {
    */
   private handlePrismaError(
     exception:
-      | Prisma.PrismaClientKnownRequestError
-      | Prisma.PrismaClientValidationError
-      | Prisma.PrismaClientUnknownRequestError,
+      | PrismaClientKnownRequestError
+      | PrismaClientValidationError
+      | PrismaClientUnknownRequestError,
     baseResponse: Partial<ErrorResponse>,
   ): ErrorResponse {
     // Prisma known request errors
-    if (exception instanceof Prisma.PrismaClientKnownRequestError) {
+    if (exception instanceof PrismaClientKnownRequestError) {
       return this.handlePrismaKnownError(exception, baseResponse);
     }
 
     // Prisma validation errors
-    if (exception instanceof Prisma.PrismaClientValidationError) {
+    if (exception instanceof PrismaClientValidationError) {
       return {
         ...baseResponse,
         statusCode: HttpStatus.BAD_REQUEST,
@@ -151,7 +155,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
    * Handle known Prisma errors with specific error codes
    */
   private handlePrismaKnownError(
-    exception: Prisma.PrismaClientKnownRequestError,
+    exception: PrismaClientKnownRequestError,
     baseResponse: Partial<ErrorResponse>,
   ): ErrorResponse {
     const { code, meta } = exception;
@@ -239,9 +243,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
    */
   private isPrismaError(exception: unknown): boolean {
     return (
-      exception instanceof Prisma.PrismaClientKnownRequestError ||
-      exception instanceof Prisma.PrismaClientValidationError ||
-      exception instanceof Prisma.PrismaClientUnknownRequestError
+      exception instanceof PrismaClientKnownRequestError ||
+      exception instanceof PrismaClientValidationError ||
+      exception instanceof PrismaClientUnknownRequestError
     );
   }
 
