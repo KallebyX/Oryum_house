@@ -23,24 +23,39 @@ function generateFallbackSecret(name: string): string {
  * Validate required environment variables
  */
 function validateEnvironment() {
+  const isVercel = !!process.env.VERCEL;
   const isProduction = process.env.NODE_ENV === 'production';
-  const isVercelProduction = process.env.VERCEL_ENV === 'production';
-  const isStrictMode = isProduction && isVercelProduction;
+  const isNonVercelProduction = isProduction && !isVercel;
 
-  // In strict production mode (Vercel production), all secrets are required
-  // In preview/development, we can auto-generate fallback secrets
+  // Only require JWT secrets for non-Vercel production (self-hosted)
+  // On Vercel (including production), we can auto-generate secrets with a warning
+  // This allows easier deployment while encouraging proper configuration
   const required = ['DATABASE_URL'];
 
-  // JWT secrets are required in strict production mode only
-  if (isStrictMode) {
+  // JWT secrets are strictly required only for self-hosted production
+  if (isNonVercelProduction) {
     required.push('JWT_SECRET', 'JWT_REFRESH_SECRET');
   } else {
-    // For preview/development, provide fallbacks if not set
+    // For Vercel deployments (all environments) and local dev, provide fallbacks if not set
     if (!process.env.JWT_SECRET) {
       process.env.JWT_SECRET = generateFallbackSecret('JWT_SECRET');
+      if (isVercel && process.env.VERCEL_ENV === 'production') {
+        Logger.warn(
+          '🔐 JWT_SECRET was auto-generated for this Vercel production deployment. ' +
+          'For security, add JWT_SECRET to your Vercel Environment Variables.',
+          'Security'
+        );
+      }
     }
     if (!process.env.JWT_REFRESH_SECRET) {
       process.env.JWT_REFRESH_SECRET = generateFallbackSecret('JWT_REFRESH_SECRET');
+      if (isVercel && process.env.VERCEL_ENV === 'production') {
+        Logger.warn(
+          '🔐 JWT_REFRESH_SECRET was auto-generated for this Vercel production deployment. ' +
+          'For security, add JWT_REFRESH_SECRET to your Vercel Environment Variables.',
+          'Security'
+        );
+      }
     }
   }
 
