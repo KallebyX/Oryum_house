@@ -575,7 +575,7 @@ export class TicketService {
     ]);
 
     // Build counts map from groupBy result
-    const countsMap = new Map(
+    const countsMap = new Map<TicketStatus, number>(
       ticketsByStatus.map(group => [group.status, group._count.status])
     );
 

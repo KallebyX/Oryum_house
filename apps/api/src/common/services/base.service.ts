@@ -2,6 +2,7 @@ import { Inject } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { PrismaService } from '../../core/prisma/prisma.service';
+import { UserRole } from '@prisma/client';
 
 /**
  * Base service with common query optimization and caching patterns
@@ -105,7 +106,7 @@ export abstract class BaseService {
             userId,
             condominiumId,
             isActive: true,
-            ...(roles ? { role: { in: roles } } : {}),
+            ...(roles ? { role: { in: roles as UserRole[] } } : {}),
           },
           select: { id: true },
         });

@@ -25,67 +25,69 @@ export class CreateCondominiumDto {
   @MaxLength(200)
   name: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'CNPJ do condomínio',
     example: '12.345.678/0001-90',
   })
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(18)
-  cnpj: string;
-
-  @ApiProperty({
-    description: 'Endereço completo',
-    example: 'Rua das Flores, 123',
-  })
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(500)
-  address: string;
-
-  @ApiPropertyOptional({
-    description: 'CEP',
-    example: '12345-678',
-  })
   @IsOptional()
   @IsString()
-  @MaxLength(10)
-  postalCode?: string;
+  @MaxLength(18)
+  cnpj?: string;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
+    description: 'Rua/Logradouro',
+    example: 'Rua das Flores',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(300)
+  street: string;
+
+  @ApiProperty({
+    description: 'Número',
+    example: '123',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(20)
+  number: string;
+
+  @ApiProperty({
+    description: 'Bairro',
+    example: 'Centro',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  district: string;
+
+  @ApiProperty({
     description: 'Cidade',
     example: 'São Paulo',
   })
-  @IsOptional()
   @IsString()
+  @IsNotEmpty()
   @MaxLength(100)
-  city?: string;
+  city: string;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'Estado (UF)',
     example: 'SP',
   })
-  @IsOptional()
   @IsString()
+  @IsNotEmpty()
   @MaxLength(2)
   @Transform(({ value }) => value?.toUpperCase())
-  state?: string;
+  state: string;
 
-  @ApiPropertyOptional({
-    description: 'Telefone de contato',
-    example: '(11) 98765-4321',
+  @ApiProperty({
+    description: 'CEP',
+    example: '12345-678',
   })
-  @IsOptional()
   @IsString()
-  phone?: string;
-
-  @ApiPropertyOptional({
-    description: 'Email de contato',
-    example: 'contato@residencialhorizonte.com',
-  })
-  @IsOptional()
-  @IsEmail()
-  email?: string;
+  @IsNotEmpty()
+  @MaxLength(10)
+  cep: string;
 
   @ApiPropertyOptional({
     description: 'URL do logo do condomínio',

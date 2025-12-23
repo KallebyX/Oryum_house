@@ -21,11 +21,11 @@ import {
   CheckAvailabilityDto,
   BookingResponseDto,
 } from './dto/booking.dto';
-import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../../core/auth/guards/roles.guard';
-import { Roles } from '../../core/auth/decorators/roles.decorator';
-import { CurrentUser } from '../../core/auth/decorators/current-user.decorator';
-import { RequireCondominium } from '../../core/auth/decorators/require-condominium.decorator';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { RequireCondominium } from '../../common/decorators/condominium.decorator';
 
 @ApiTags('Reservas de Áreas Comuns')
 @ApiBearerAuth()
