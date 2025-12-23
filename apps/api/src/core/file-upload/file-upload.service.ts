@@ -2,7 +2,6 @@ import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import sharp from 'sharp';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import { createReadStream } from 'fs';
@@ -10,6 +9,25 @@ import { promisify } from 'util';
 import { exec } from 'child_process';
 
 const execAsync = promisify(exec);
+
+// Lazy load sharp to prevent crashes if native bindings are unavailable
+let sharpModule: typeof import('sharp') | null = null;
+let sharpLoadError: Error | null = null;
+
+async function getSharp(): Promise<typeof import('sharp')> {
+  if (sharpLoadError) {
+    throw sharpLoadError;
+  }
+  if (!sharpModule) {
+    try {
+      sharpModule = await import('sharp');
+    } catch (error) {
+      sharpLoadError = error as Error;
+      throw error;
+    }
+  }
+  return sharpModule;
+}
 
 interface UploadResult {
   success: boolean;
@@ -110,9 +128,14 @@ export class FileUploadService {
       const url = await this.getSignedUrl(key);
       let thumbnailUrl: string | undefined;
 
-      // Gerar thumbnail se for imagem
+      // Gerar thumbnail se for imagem (gracefully handle if sharp is unavailable)
       if (options.generateThumbnail && this.isImage(file.mimetype)) {
-        thumbnailUrl = await this.generateThumbnail(file, folder, fileName);
+        try {
+          thumbnailUrl = await this.generateThumbnail(file, folder, fileName);
+        } catch (thumbnailError) {
+          this.logger.warn(`Thumbnail generation failed (sharp may not be available): ${thumbnailError.message}`);
+          // Continue without thumbnail - don't fail the entire upload
+        }
       }
 
       this.logger.log(`Arquivo enviado com sucesso: ${fileName}`);
@@ -214,12 +237,13 @@ export class FileUploadService {
   }
 
   private async generateThumbnail(
-    file: Express.Multer.File, 
-    folder: string, 
+    file: Express.Multer.File,
+    folder: string,
     originalFileName: string
   ): Promise<string> {
     try {
-      const thumbnailBuffer = await sharp(file.buffer)
+      const sharp = await getSharp();
+      const thumbnailBuffer = await sharp.default(file.buffer)
         .resize(300, 300, {
           fit: 'inside',
           withoutEnlargement: true,

@@ -63,6 +63,9 @@
     "web-push": "^3.6.6",
     "zod": "^3.22.4"
   },
+  "optionalDependencies": {
+    "@img/sharp-linux-x64": "^0.33.0"
+  },
   "devDependencies": {
     "@nestjs/cli": "^10.2.1",
     "@nestjs/schematics": "^10.0.3",
