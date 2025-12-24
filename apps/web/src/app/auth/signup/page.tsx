@@ -10,7 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Icons } from '@/components/ui/icons';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+// Use relative URL - Next.js rewrites will proxy to the API
+const API_URL = '';
 
 export default function SignUpPage() {
   const router = useRouter();

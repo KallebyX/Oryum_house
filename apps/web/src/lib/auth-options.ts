@@ -3,7 +3,8 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import { JWT } from 'next-auth/jwt';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+// Server-side needs full URL (rewrites only work for client requests)
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://oryum-house-api.vercel.app';
 
 // Token expiration buffer (refresh 5 minutes before expiry)
 const TOKEN_REFRESH_BUFFER = 5 * 60 * 1000; // 5 minutes in ms

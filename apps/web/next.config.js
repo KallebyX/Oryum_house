@@ -52,6 +52,16 @@ const nextConfig = {
       },
     ];
   },
+  // Rewrites para proxy da API
+  async rewrites() {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://oryum-house-api.vercel.app';
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${apiUrl}/api/:path*`,
+      },
+    ];
+  },
   // Webpack customization
   webpack: (config, { dev, isServer }) => {
     // Otimizações para produção

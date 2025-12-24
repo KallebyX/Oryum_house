@@ -56,8 +56,8 @@ export default function TestPage() {
               >
                 💰 Planos e Preços
               </a>
-              <a 
-                href="http://localhost:3001/api" 
+              <a
+                href="/api"
                 target="_blank"
                 className="bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700 transition-colors"
               >

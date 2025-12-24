@@ -3,9 +3,10 @@ import { getSession } from 'next-auth/react';
 
 /**
  * API client configuration
+ * Uses relative URL so Next.js rewrites can proxy to the external API
  */
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api',
+  baseURL: '/api',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
