@@ -9,7 +9,7 @@ import { BookingFiltersBar } from '@/components/bookings/booking-filters';
 import { CreateBookingDialog } from '@/components/bookings/create-booking-dialog';
 import { BookingDetailDrawer } from '@/components/bookings/booking-detail-drawer';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { ViewToggle } from '@/components/ui/tabs';
 import {
   Plus,
   LayoutList,
@@ -50,55 +50,39 @@ export default function BookingsPage() {
     refetchBookings();
   };
 
+  const viewToggleOptions = [
+    { value: 'calendar', label: 'Calendario', icon: <Calendar className="h-4 w-4" /> },
+    { value: 'list', label: 'Lista', icon: <LayoutList className="h-4 w-4" /> },
+  ];
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl font-bold text-foreground">
               Reservas
             </h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Gerencie as reservas de áreas comuns do condomínio
+            <p className="text-sm text-muted-foreground mt-1">
+              Gerencie as reservas de areas comuns do condominio
             </p>
           </div>
 
           <div className="flex items-center gap-3">
             {/* View Toggle */}
-            <div className="flex items-center rounded-lg border bg-white dark:bg-gray-950 p-1">
-              <button
-                onClick={() => setViewMode('calendar')}
-                className={cn(
-                  'flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-                  viewMode === 'calendar'
-                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400'
-                    : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
-                )}
-              >
-                <Calendar className="h-4 w-4" />
-                <span className="hidden sm:inline">Calendário</span>
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={cn(
-                  'flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-                  viewMode === 'list'
-                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400'
-                    : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
-                )}
-              >
-                <LayoutList className="h-4 w-4" />
-                <span className="hidden sm:inline">Lista</span>
-              </button>
-            </div>
+            <ViewToggle
+              value={viewMode}
+              onValueChange={(value) => setViewMode(value as ViewMode)}
+              options={viewToggleOptions}
+            />
 
             {/* Refresh Button */}
             <Button
               variant="outline"
               size="sm"
               onClick={handleRefresh}
-              className="gap-2"
+              className="gap-2 shadow-sm"
             >
               <RefreshCw className="h-4 w-4" />
               <span className="hidden sm:inline">Atualizar</span>
@@ -107,7 +91,7 @@ export default function BookingsPage() {
             {/* Create Button */}
             <Button
               onClick={() => setCreateDialogOpen(true)}
-              className="gap-2"
+              className="gap-2 shadow-sm"
             >
               <Plus className="h-4 w-4" />
               <span>Nova Reserva</span>

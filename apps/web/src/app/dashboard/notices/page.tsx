@@ -49,11 +49,11 @@ export default function NoticesPage() {
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl font-bold text-foreground">
               Comunicados
             </h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Gerencie os comunicados e avisos do condomínio
+            <p className="text-sm text-muted-foreground mt-1">
+              Gerencie os comunicados e avisos do condominio
             </p>
           </div>
 
@@ -63,7 +63,7 @@ export default function NoticesPage() {
               variant="outline"
               size="sm"
               onClick={handleRefresh}
-              className="gap-2"
+              className="gap-2 shadow-sm"
             >
               <RefreshCw className="h-4 w-4" />
               <span className="hidden sm:inline">Atualizar</span>
@@ -72,7 +72,7 @@ export default function NoticesPage() {
             {/* Create Button */}
             <Button
               onClick={() => setCreateDialogOpen(true)}
-              className="gap-2"
+              className="gap-2 shadow-sm"
             >
               <Plus className="h-4 w-4" />
               <span>Novo Comunicado</span>
