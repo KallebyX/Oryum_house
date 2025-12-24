@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar } from '@/components/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn, formatDateTime, formatRelativeTime } from '@/lib/utils';
 import {
   X,
@@ -13,14 +14,17 @@ import {
   Calendar,
   Tag,
   MessageSquare,
-  Paperclip,
   Edit,
   CheckCircle,
   AlertTriangle,
   ChevronRight,
   History,
   Star,
-  Send,
+  FileText,
+  Building2,
+  Timer,
+  UserCircle,
+  ArrowRight,
 } from 'lucide-react';
 import {
   type Ticket,
@@ -56,23 +60,13 @@ const priorityColorClasses: Record<string, string> = {
   red: 'bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400',
 };
 
-type TabType = 'details' | 'comments' | 'history';
-
 export function TicketDetailDrawer({
   ticket,
   open,
   onOpenChange,
   condominiumId,
 }: TicketDetailDrawerProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('details');
-
   if (!open || !ticket) return null;
-
-  const tabs: { id: TabType; label: string; icon: any }[] = [
-    { id: 'details', label: 'Detalhes', icon: Tag },
-    { id: 'comments', label: 'Comentários', icon: MessageSquare },
-    { id: 'history', label: 'Histórico', icon: History },
-  ];
 
   // Demo status history
   const statusHistory = ticket.statusHistory || [
@@ -83,7 +77,7 @@ export function TicketDetailDrawer({
       toStatus: 'EM_AVALIACAO' as TicketStatus,
       changedById: 'user-1',
       changedBy: { id: 'user-1', name: 'Carlos Santos', email: 'carlos@email.com' },
-      note: 'Ticket recebido para avaliação',
+      note: 'Ticket recebido para avaliacao',
       createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     },
     {
@@ -103,7 +97,7 @@ export function TicketDetailDrawer({
       {/* Backdrop */}
       <div
         className={cn(
-          'fixed inset-0 z-50 bg-black/50 transition-opacity',
+          'fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity duration-300',
           open ? 'opacity-100' : 'opacity-0 pointer-events-none'
         )}
         onClick={() => onOpenChange(false)}
@@ -112,64 +106,79 @@ export function TicketDetailDrawer({
       {/* Drawer */}
       <div
         className={cn(
-          'fixed right-0 top-0 z-50 h-full w-full max-w-xl bg-white dark:bg-gray-950',
-          'border-l border-gray-200 dark:border-gray-800 shadow-xl',
-          'transform transition-transform duration-300 ease-in-out',
+          'fixed right-0 top-0 z-50 h-full w-full max-w-xl',
+          'bg-background border-l border-border shadow-2xl',
+          'transform transition-transform duration-300 ease-out',
           open ? 'translate-x-0' : 'translate-x-full'
         )}
       >
         <div className="flex h-full flex-col">
           {/* Header */}
-          <div className="flex items-start justify-between border-b border-gray-200 dark:border-gray-800 p-6">
-            <div className="flex-1 min-w-0 pr-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Badge
-                  variant="secondary"
-                  className={cn(
-                    'text-xs',
-                    statusColorClasses[TICKET_STATUS_COLORS[ticket.status]]
+          <div className="flex-shrink-0 border-b border-border bg-muted/30 p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                {/* Badges */}
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                  <Badge
+                    variant="secondary"
+                    className={cn(
+                      'text-xs font-medium',
+                      statusColorClasses[TICKET_STATUS_COLORS[ticket.status]]
+                    )}
+                  >
+                    {TICKET_STATUS_LABELS[ticket.status]}
+                  </Badge>
+                  <Badge
+                    variant="secondary"
+                    className={cn(
+                      'text-xs font-medium',
+                      priorityColorClasses[TICKET_PRIORITY_COLORS[ticket.priority]]
+                    )}
+                  >
+                    {TICKET_PRIORITY_LABELS[ticket.priority]}
+                  </Badge>
+                  {ticket.priority === 'ALTA' && (
+                    <AlertTriangle className="h-4 w-4 text-red-500 animate-pulse" />
                   )}
-                >
-                  {TICKET_STATUS_LABELS[ticket.status]}
-                </Badge>
-                <Badge
-                  variant="secondary"
-                  className={cn(
-                    'text-xs',
-                    priorityColorClasses[TICKET_PRIORITY_COLORS[ticket.priority]]
-                  )}
-                >
-                  {TICKET_PRIORITY_LABELS[ticket.priority]}
-                </Badge>
-                {ticket.priority === 'ALTA' && (
-                  <AlertTriangle className="h-4 w-4 text-red-500" />
-                )}
+                </div>
+
+                {/* Title */}
+                <h2 className="text-xl font-semibold text-foreground leading-tight">
+                  {ticket.title}
+                </h2>
+
+                {/* Meta */}
+                <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
+                  <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded">
+                    #{ticket.id.slice(0, 8)}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Tag className="h-3.5 w-3.5" />
+                    {TICKET_CATEGORY_LABELS[ticket.category]}
+                  </span>
+                </div>
               </div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {ticket.title}
-              </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                #{ticket.id.slice(0, 8)} • {TICKET_CATEGORY_LABELS[ticket.category]}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="gap-2">
-                <Edit className="h-4 w-4" />
-                Editar
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={() => onOpenChange(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
+
+              {/* Actions */}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <Button variant="outline" size="sm" className="gap-2 shadow-sm">
+                  <Edit className="h-4 w-4" />
+                  <span className="hidden sm:inline">Editar</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9"
+                  onClick={() => onOpenChange(false)}
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
             </div>
           </div>
 
           {/* Status Change */}
-          <div className="border-b border-gray-200 dark:border-gray-800 p-4 bg-gray-50 dark:bg-gray-900">
+          <div className="flex-shrink-0 border-b border-border p-4 bg-background">
             <TicketStatusSelect
               ticketId={ticket.id}
               currentStatus={ticket.status}
@@ -178,39 +187,51 @@ export function TicketDetailDrawer({
           </div>
 
           {/* Tabs */}
-          <div className="border-b border-gray-200 dark:border-gray-800">
-            <div className="flex px-4">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={cn(
-                      'flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors',
-                      activeTab === tab.id
-                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {tab.label}
-                  </button>
-                );
-              })}
+          <Tabs defaultValue="details" className="flex-1 flex flex-col min-h-0">
+            <div className="flex-shrink-0 border-b border-border bg-background">
+              <TabsList variant="underline" className="w-full px-4">
+                <TabsTrigger
+                  value="details"
+                  variant="underline"
+                  icon={<FileText className="h-4 w-4" />}
+                >
+                  Detalhes
+                </TabsTrigger>
+                <TabsTrigger
+                  value="comments"
+                  variant="underline"
+                  icon={<MessageSquare className="h-4 w-4" />}
+                  badge={
+                    ticket.comments && ticket.comments.length > 0 ? (
+                      <Badge variant="secondary" className="h-5 px-1.5 text-xs ml-1.5">
+                        {ticket.comments.length}
+                      </Badge>
+                    ) : undefined
+                  }
+                >
+                  Comentarios
+                </TabsTrigger>
+                <TabsTrigger
+                  value="history"
+                  variant="underline"
+                  icon={<History className="h-4 w-4" />}
+                >
+                  Historico
+                </TabsTrigger>
+              </TabsList>
             </div>
-          </div>
 
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6">
-            {activeTab === 'details' && (
-              <div className="space-y-6">
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto">
+              {/* Details Tab */}
+              <TabsContent value="details" className="p-6 space-y-6 mt-0" spacing="none">
                 {/* Description */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-                    Descrição
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    Descricao
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-muted-foreground leading-relaxed pl-6">
                     {ticket.description}
                   </p>
                 </div>
@@ -219,12 +240,12 @@ export function TicketDetailDrawer({
                 <div className="grid grid-cols-2 gap-4">
                   {/* Location */}
                   {ticket.location && (
-                    <div>
-                      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-1">
-                        <MapPin className="h-3 w-3" />
-                        Localização
+                    <div className="p-4 rounded-xl bg-muted/50 space-y-1">
+                      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                        <MapPin className="h-3.5 w-3.5" />
+                        Localizacao
                       </div>
-                      <p className="text-sm text-gray-900 dark:text-white">
+                      <p className="text-sm font-medium text-foreground">
                         {ticket.location}
                       </p>
                     </div>
@@ -232,35 +253,35 @@ export function TicketDetailDrawer({
 
                   {/* Unit */}
                   {ticket.unit && (
-                    <div>
-                      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-1">
-                        <User className="h-3 w-3" />
+                    <div className="p-4 rounded-xl bg-muted/50 space-y-1">
+                      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                        <Building2 className="h-3.5 w-3.5" />
                         Unidade
                       </div>
-                      <p className="text-sm text-gray-900 dark:text-white">
+                      <p className="text-sm font-medium text-foreground">
                         {ticket.unit.block} - {ticket.unit.number}
                       </p>
                     </div>
                   )}
 
                   {/* Created */}
-                  <div>
-                    <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-1">
-                      <Calendar className="h-3 w-3" />
+                  <div className="p-4 rounded-xl bg-muted/50 space-y-1">
+                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                      <Calendar className="h-3.5 w-3.5" />
                       Criado em
                     </div>
-                    <p className="text-sm text-gray-900 dark:text-white">
+                    <p className="text-sm font-medium text-foreground">
                       {formatDateTime(ticket.createdAt)}
                     </p>
                   </div>
 
                   {/* SLA */}
-                  <div>
-                    <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-1">
-                      <Clock className="h-3 w-3" />
+                  <div className="p-4 rounded-xl bg-muted/50 space-y-1">
+                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                      <Timer className="h-3.5 w-3.5" />
                       SLA
                     </div>
-                    <p className="text-sm text-gray-900 dark:text-white">
+                    <p className="text-sm font-medium text-foreground">
                       {ticket.slaHours} horas
                     </p>
                   </div>
@@ -268,54 +289,55 @@ export function TicketDetailDrawer({
 
                 {/* People */}
                 <div className="space-y-3">
-                  <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <User className="h-4 w-4 text-muted-foreground" />
                     Pessoas
                   </h3>
 
                   {/* Opened By */}
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-900">
+                  <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/50">
                     <Avatar
                       fallback={ticket.openedBy?.name || 'U'}
-                      className="h-10 w-10"
+                      className="h-11 w-11 border-2 border-background shadow-sm"
                     />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {ticket.openedBy?.name || 'Usuário'}
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground">
+                        {ticket.openedBy?.name || 'Usuario'}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-muted-foreground">
                         Solicitante
                       </p>
                     </div>
                   </div>
 
                   {/* Assigned To */}
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-900">
+                  <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/50">
                     {ticket.assignedTo ? (
                       <>
                         <Avatar
                           fallback={ticket.assignedTo.name}
-                          className="h-10 w-10"
+                          className="h-11 w-11 border-2 border-background shadow-sm"
                         />
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-foreground">
                             {ticket.assignedTo.name}
                           </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Responsável
+                          <p className="text-xs text-muted-foreground">
+                            Responsavel
                           </p>
                         </div>
                       </>
                     ) : (
                       <>
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-800">
-                          <User className="h-5 w-5 text-gray-400" />
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-muted border-2 border-dashed border-border">
+                          <UserCircle className="h-6 w-6 text-muted-foreground" />
                         </div>
-                        <div>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
-                            Não atribuído
+                        <div className="flex-1">
+                          <p className="text-sm text-muted-foreground">
+                            Nao atribuido
                           </p>
-                          <Button variant="link" size="sm" className="h-auto p-0 text-xs">
-                            Atribuir responsável
+                          <Button variant="link" size="sm" className="h-auto p-0 text-xs text-primary">
+                            Atribuir responsavel
                           </Button>
                         </div>
                       </>
@@ -325,13 +347,14 @@ export function TicketDetailDrawer({
 
                 {/* Tags */}
                 {ticket.tags && ticket.tags.length > 0 && (
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      <Tag className="h-4 w-4 text-muted-foreground" />
                       Tags
                     </h3>
                     <div className="flex flex-wrap gap-2">
                       {ticket.tags.map((tag, index) => (
-                        <Badge key={index} variant="secondary">
+                        <Badge key={index} variant="secondary" className="rounded-full">
                           {tag}
                         </Badge>
                       ))}
@@ -341,107 +364,123 @@ export function TicketDetailDrawer({
 
                 {/* Satisfaction */}
                 {ticket.satisfactionScore && (
-                  <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
-                      <span className="text-sm font-medium text-green-700 dark:text-green-400">
-                        Avaliação do morador
+                  <div className="p-5 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border border-green-200 dark:border-green-800">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="h-8 w-8 rounded-lg bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                        <Star className="h-4 w-4 text-green-600 dark:text-green-400" />
+                      </div>
+                      <span className="text-sm font-semibold text-green-700 dark:text-green-400">
+                        Avaliacao do morador
                       </span>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-2">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <Star
                           key={star}
                           className={cn(
-                            'h-5 w-5',
+                            'h-6 w-6 transition-colors',
                             star <= ticket.satisfactionScore!
                               ? 'text-yellow-500 fill-yellow-500'
                               : 'text-gray-300 dark:text-gray-600'
                           )}
                         />
                       ))}
-                      <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                      <span className="ml-2 text-lg font-bold text-green-700 dark:text-green-400">
                         {ticket.satisfactionScore}/5
                       </span>
                     </div>
                   </div>
                 )}
-              </div>
-            )}
+              </TabsContent>
 
-            {activeTab === 'comments' && (
-              <TicketComments
-                ticketId={ticket.id}
-                condominiumId={condominiumId}
-                comments={ticket.comments}
-              />
-            )}
+              {/* Comments Tab */}
+              <TabsContent value="comments" className="p-6 mt-0" spacing="none">
+                <TicketComments
+                  ticketId={ticket.id}
+                  condominiumId={condominiumId}
+                  comments={ticket.comments}
+                />
+              </TabsContent>
 
-            {activeTab === 'history' && (
-              <div className="space-y-4">
+              {/* History Tab */}
+              <TabsContent value="history" className="p-6 mt-0" spacing="none">
                 {statusHistory.length === 0 ? (
-                  <div className="text-center py-8">
-                    <History className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Nenhum histórico de alterações
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center mb-4">
+                      <History className="h-7 w-7 text-muted-foreground" />
+                    </div>
+                    <h3 className="font-medium text-foreground mb-1">Nenhum historico</h3>
+                    <p className="text-sm text-muted-foreground text-center">
+                      Nao ha alteracoes de status registradas
                     </p>
                   </div>
                 ) : (
                   <div className="relative">
-                    <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-800" />
-                    {statusHistory.map((history, index) => (
-                      <div key={history.id} className="relative flex gap-4 pb-6">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white dark:bg-gray-950 border-2 border-gray-200 dark:border-gray-800 z-10">
-                          <ChevronRight className="h-4 w-4 text-gray-400" />
-                        </div>
-                        <div className="flex-1 pt-1">
-                          <p className="text-sm text-gray-900 dark:text-white">
-                            <span className="font-medium">
-                              {history.changedBy?.name || 'Sistema'}
-                            </span>{' '}
-                            alterou o status
-                          </p>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                            <Badge variant="outline" className="text-xs mr-1">
-                              {TICKET_STATUS_LABELS[history.fromStatus]}
-                            </Badge>
-                            <ChevronRight className="inline h-3 w-3 mx-1" />
-                            <Badge
-                              variant="secondary"
-                              className={cn(
-                                'text-xs',
-                                statusColorClasses[TICKET_STATUS_COLORS[history.toStatus]]
-                              )}
-                            >
-                              {TICKET_STATUS_LABELS[history.toStatus]}
-                            </Badge>
-                          </p>
-                          {history.note && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 italic">
-                              "{history.note}"
+                    {/* Timeline line */}
+                    <div className="absolute left-5 top-3 bottom-3 w-0.5 bg-border" />
+
+                    <div className="space-y-6">
+                      {statusHistory.map((history) => (
+                        <div key={history.id} className="relative flex gap-4">
+                          {/* Timeline dot */}
+                          <div className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full bg-background border-2 border-border shadow-sm">
+                            <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                          </div>
+
+                          {/* Content */}
+                          <div className="flex-1 pt-1 pb-2">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="font-medium text-foreground">
+                                {history.changedBy?.name || 'Sistema'}
+                              </span>
+                              <span className="text-sm text-muted-foreground">
+                                alterou o status
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant="outline" className="text-xs">
+                                {TICKET_STATUS_LABELS[history.fromStatus]}
+                              </Badge>
+                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                              <Badge
+                                variant="secondary"
+                                className={cn(
+                                  'text-xs',
+                                  statusColorClasses[TICKET_STATUS_COLORS[history.toStatus]]
+                                )}
+                              >
+                                {TICKET_STATUS_LABELS[history.toStatus]}
+                              </Badge>
+                            </div>
+
+                            {history.note && (
+                              <p className="text-sm text-muted-foreground italic mb-2 pl-3 border-l-2 border-muted">
+                                "{history.note}"
+                              </p>
+                            )}
+
+                            <p className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {formatRelativeTime(history.createdAt)}
                             </p>
-                          )}
-                          <p className="text-xs text-gray-400 mt-2">
-                            {formatRelativeTime(history.createdAt)}
-                          </p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 )}
-              </div>
-            )}
-          </div>
+              </TabsContent>
+            </div>
+          </Tabs>
 
           {/* Footer Actions */}
           {ticket.status !== 'CONCLUIDA' && ticket.status !== 'CANCELADA' && (
-            <div className="border-t border-gray-200 dark:border-gray-800 p-4 bg-gray-50 dark:bg-gray-900">
-              <div className="flex gap-2">
-                <Button className="flex-1 gap-2" variant="default">
-                  <CheckCircle className="h-4 w-4" />
-                  Marcar como Concluída
-                </Button>
-              </div>
+            <div className="flex-shrink-0 border-t border-border p-4 bg-muted/30">
+              <Button className="w-full gap-2 shadow-sm" size="lg">
+                <CheckCircle className="h-5 w-5" />
+                Marcar como Concluida
+              </Button>
             </div>
           )}
         </div>

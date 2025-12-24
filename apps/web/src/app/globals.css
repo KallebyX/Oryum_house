@@ -227,8 +227,202 @@
   .kanban-column {
     min-width: 280px;
   }
-  
+
   .kanban-card {
     @apply p-3 mb-2;
   }
+}
+
+/* ============================================================================
+   Professional Tab Animations
+   ============================================================================ */
+
+/* Fade animations for tabs */
+@keyframes tab-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tab-fade-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* Tab content animation classes */
+[data-state="active"].animate-fade-in {
+  animation: tab-fade-in 0.2s ease-out forwards;
+}
+
+[data-state="inactive"].animate-fade-out {
+  animation: tab-fade-out 0.15s ease-in forwards;
+}
+
+/* Tab indicator underline animation */
+.tab-indicator {
+  @apply absolute bottom-0 left-0 h-0.5 bg-primary;
+  transition: left 0.2s ease-out, width 0.2s ease-out;
+}
+
+/* Smooth focus states for tabs */
+[role="tab"]:focus-visible {
+  @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background rounded-md;
+}
+
+/* Active tab glow effect */
+[role="tab"][aria-selected="true"] {
+  @apply relative;
+}
+
+/* Tab hover micro-interactions */
+[role="tab"]:not([aria-selected="true"]):hover {
+  @apply transform scale-[1.02];
+  transition: transform 0.15s ease-out;
+}
+
+/* ============================================================================
+   View Toggle Styles
+   ============================================================================ */
+
+.view-toggle {
+  @apply inline-flex items-center rounded-lg border border-border bg-card p-1;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.view-toggle-button {
+  @apply inline-flex items-center justify-center gap-2 rounded-md px-3 py-1.5;
+  @apply text-sm font-medium transition-all duration-200;
+}
+
+.view-toggle-button[aria-selected="true"] {
+  @apply bg-primary text-primary-foreground shadow-sm;
+}
+
+.view-toggle-button[aria-selected="false"] {
+  @apply text-muted-foreground hover:text-foreground hover:bg-muted/50;
+}
+
+/* ============================================================================
+   Card-based Tabs
+   ============================================================================ */
+
+.tab-card {
+  @apply relative rounded-xl border border-border bg-card p-4;
+  @apply transition-all duration-200;
+}
+
+.tab-card:hover {
+  @apply border-primary/50 shadow-md;
+}
+
+.tab-card[aria-selected="true"] {
+  @apply border-primary bg-primary/5 shadow-lg;
+}
+
+.tab-card[aria-selected="true"]::before {
+  content: '';
+  @apply absolute top-3 right-3 h-2 w-2 rounded-full bg-primary;
+}
+
+/* ============================================================================
+   Pill-style Tabs
+   ============================================================================ */
+
+.tab-pill {
+  @apply rounded-full px-4 py-2 text-sm font-medium;
+  @apply transition-all duration-200;
+}
+
+.tab-pill[aria-selected="true"] {
+  @apply bg-primary text-primary-foreground shadow-sm;
+}
+
+.tab-pill[aria-selected="false"] {
+  @apply text-muted-foreground hover:bg-muted hover:text-foreground;
+}
+
+/* ============================================================================
+   Stats Cards (Unified Design)
+   ============================================================================ */
+
+.stat-card {
+  @apply relative overflow-hidden rounded-xl border border-border bg-card p-5;
+  @apply transition-all duration-200;
+}
+
+.stat-card:hover {
+  @apply shadow-md border-primary/20;
+  transform: translateY(-2px);
+}
+
+.stat-card-icon {
+  @apply absolute top-4 right-4 h-10 w-10 rounded-lg;
+  @apply flex items-center justify-center;
+  @apply bg-primary/10 text-primary;
+}
+
+.stat-card-value {
+  @apply text-3xl font-bold tracking-tight;
+}
+
+.stat-card-label {
+  @apply text-sm text-muted-foreground mt-1;
+}
+
+.stat-card-trend {
+  @apply mt-2 flex items-center gap-1 text-xs font-medium;
+}
+
+.stat-card-trend.positive {
+  @apply text-green-600 dark:text-green-400;
+}
+
+.stat-card-trend.negative {
+  @apply text-red-600 dark:text-red-400;
+}
+
+/* ============================================================================
+   Professional Gaps and Spacing Fixes
+   ============================================================================ */
+
+/* Consistent section spacing */
+.section-gap {
+  @apply space-y-6;
+}
+
+/* Header spacing */
+.page-header {
+  @apply flex flex-col gap-4 md:flex-row md:items-center md:justify-between;
+}
+
+/* Card grid gaps */
+.card-grid {
+  @apply grid gap-4;
+  @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-4;
+}
+
+/* List gaps */
+.list-gap {
+  @apply space-y-3;
+}
+
+/* Form gaps */
+.form-gap {
+  @apply space-y-4;
+}
+
+/* Button group gaps */
+.button-group {
+  @apply flex items-center gap-2;
 }
